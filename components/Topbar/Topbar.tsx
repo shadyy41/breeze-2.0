@@ -5,7 +5,7 @@ import SignInButton from './SignInButton';
 
 const Topbar = async () => {
   const session = await auth();
-  console.log(session);
+
   return (
     <div className='flex h-16 w-full flex-shrink-0 items-center justify-between rounded-md border border-zinc-800 bg-zinc-950 px-6'>
       <Navigation />
