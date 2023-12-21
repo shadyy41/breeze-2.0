@@ -4,12 +4,29 @@ import TopMenu from './TopMenu';
 import Library from './Library';
 
 const Sidebar = () => {
-  const [width, setWidth] = useState<number>(350);
-  const [isClicked, setClicked] = useState<boolean>(false);
-  const actualWidth = useRef<number>(350);
-  const minWidth: number = 85,
+  const minWidth: number = 68,
     maxWidth: number = 520,
-    trigger: number = 275;
+    trigger: number = 275,
+    smallDeviceThreshold: number = 768;
+
+  const [width, setWidth] = useState<number>(minWidth);
+  const [isClicked, setClicked] = useState<boolean>(false);
+  const [smallDevice, setSmallDevice] = useState<boolean>(true);
+  const actualWidth = useRef<number>(minWidth);
+
+  useEffect(() => {
+    if (!window) return;
+    else setSmallDevice(window.innerWidth < smallDeviceThreshold);
+
+    const handleResize = () => {
+      setSmallDevice(window.innerWidth < smallDeviceThreshold);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const handleMousemove = (e: MouseEvent) => {
@@ -26,6 +43,7 @@ const Sidebar = () => {
       */
       if (!isClicked) return;
       setWidth((w) => {
+        console.log(e.movementX);
         const updated = actualWidth.current + e.movementX;
 
         if (updated > actualWidth.current) {
@@ -72,6 +90,8 @@ const Sidebar = () => {
   }, [isClicked]);
 
   const expand = () => {
+    if (smallDevice) return;
+
     if (width == minWidth) {
       setWidth(trigger);
       actualWidth.current = trigger;
@@ -97,7 +117,9 @@ const Sidebar = () => {
       <div
         className={`h-full w-0.5 ${
           isClicked && 'bg-pink-600'
-        } transition-colors hover:cursor-col-resize hover:bg-pink-600`}
+        } transition-colors hover:cursor-col-resize hover:bg-pink-600 ${
+          smallDevice ? 'hidden' : 'flex'
+        }`}
         onMouseDown={() => setClicked(true)}
       ></div>
     </aside>

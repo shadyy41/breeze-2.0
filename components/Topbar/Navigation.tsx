@@ -1,27 +1,31 @@
 'use client';
-import { PiArrowLeft, PiArrowRight } from 'react-icons/pi';
+import { PiCaretRightBold, PiCaretLeftBold } from 'react-icons/pi';
 import { useRouter } from 'next/navigation';
-
+import { Button } from '../ui/button';
 
 const Navigation = () => {
   const router = useRouter();
 
   return (
-    <nav className='flex gap-1'>
-      <button
-        className='flex aspect-square h-10 items-center justify-center rounded-full border-2 border-zinc-800 bg-zinc-900 transition-colors hover:border-pink-600 hover:text-zinc-200'
+    <nav className='flex gap-2'>
+      <Button
+        variant={'secondary'}
+        size={'icon'}
+        className='rounded-full'
         onClick={() => router.back()}
       >
-        <PiArrowLeft className='text-lg' />
-      </button>
-      <button
-        className='flex aspect-square h-10 items-center justify-center rounded-full border-2 border-zinc-800 bg-zinc-900 transition-colors hover:border-pink-600 hover:text-zinc-200'
+        <PiCaretLeftBold className='text-lg' />
+      </Button>
+      <Button
+        variant={'secondary'}
+        size={'icon'}
+        className='rounded-full'
         onClick={() => router.forward()}
       >
-        <PiArrowRight className='text-lg' />
-      </button>
+        <PiCaretRightBold className='text-lg' />
+      </Button>
     </nav>
-  )
-}
+  );
+};
 
-export default Navigation
+export default Navigation;
