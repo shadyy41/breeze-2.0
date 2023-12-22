@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import TopMenu from './TopMenu';
-import Library from './Library';
+import Library from './BottomMenu';
 
 const Sidebar = () => {
   const minWidth: number = 68,
@@ -118,7 +118,7 @@ const Sidebar = () => {
         className={`h-full w-0.5 ${
           isClicked && 'bg-pink-600'
         } transition-colors hover:cursor-col-resize hover:bg-pink-600 ${
-          smallDevice ? 'hidden' : 'flex'
+          smallDevice && 'invisible'
         }`}
         onMouseDown={() => setClicked(true)}
       ></div>

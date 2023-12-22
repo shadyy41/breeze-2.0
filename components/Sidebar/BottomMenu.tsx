@@ -1,13 +1,14 @@
 import { PiPlaylistFill } from 'react-icons/pi';
 import { Button } from '../ui/button';
+import UploadButton from './UploadButton';
 
 const Library: React.FC<{
   expand: () => void;
   expanded: boolean;
 }> = ({ expand, expanded }) => {
   return (
-    <div className='flex h-full w-full flex-col gap-2 rounded-md border border-zinc-800 bg-zinc-950 font-medium'>
-      <header className='w-full px-5 py-5'>
+    <div className='flex flex-grow flex-col gap-5 rounded-md border border-zinc-800 bg-zinc-950 px-5 py-5 font-medium'>
+      <header className='w-full'>
         <Button
           variant={'skeleton'}
           size={'skeleton'}
@@ -18,6 +19,7 @@ const Library: React.FC<{
           {expanded && 'Your Library'}
         </Button>
       </header>
+      <UploadButton expanded={expanded} />
     </div>
   );
 };
