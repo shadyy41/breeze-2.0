@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog';
 
 import { Button } from '../ui/button';
 
@@ -37,7 +37,7 @@ import { useState } from 'react';
 const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
   user,
 }) => {
-  const [open, setIsOpen] = useState<boolean>(false)
+  const [open, setIsOpen] = useState<boolean>(false);
 
   return (
     <>
@@ -54,7 +54,7 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
         <DropdownMenuContent>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={()=>setIsOpen(true)}>
+          <DropdownMenuItem onSelect={() => setIsOpen(true)}>
             Sign Out
           </DropdownMenuItem>
         </DropdownMenuContent>

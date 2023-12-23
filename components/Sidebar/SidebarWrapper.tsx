@@ -1,16 +1,16 @@
-import React from 'react'
-import Sidebar from './Sidebar'
+import React from 'react';
+import Sidebar from './Sidebar';
 import { auth } from '@/lib/auth';
 import { Providers } from '../providers';
 
-const SidebarWrapper = async() => {
+const SidebarWrapper = async () => {
   const session = await auth();
 
   return (
     <Providers session={session}>
-      <Sidebar/>
+      <Sidebar />
     </Providers>
-  )
-}
+  );
+};
 
-export default SidebarWrapper
+export default SidebarWrapper;

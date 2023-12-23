@@ -111,7 +111,7 @@ const Sidebar = () => {
     >
       <div className='flex h-full w-full flex-col gap-2'>
         <TopMenu expanded={width !== minWidth} />
-        <BottomMenu expand={expand} expanded={width !== minWidth}/>
+        <BottomMenu expand={expand} expanded={width !== minWidth} />
       </div>
       <div
         className={`h-full w-0.5 ${

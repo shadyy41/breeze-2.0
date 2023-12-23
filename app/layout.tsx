@@ -4,8 +4,7 @@ import './globals.css';
 import Player from '../components/Player';
 import Topbar from '@/components/Topbar/Topbar';
 import SidebarWrapper from '@/components/Sidebar/SidebarWrapper';
-import { Toaster } from "@/components/ui/toaster"
-
+import { Toaster } from '@/components/ui/toaster';
 
 // const font = Inter({ subsets: ['latin'] });
 const font = Lexend({ subsets: ['latin'] });

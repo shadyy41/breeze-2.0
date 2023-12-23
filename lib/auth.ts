@@ -7,9 +7,7 @@ export const {
   auth,
   handlers: { GET, POST },
 } = NextAuth({
-  providers: [
-    GoogleProvider,
-  ],
+  providers: [GoogleProvider],
   adapter: SupabaseAdapter({
     url: process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
     secret: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
