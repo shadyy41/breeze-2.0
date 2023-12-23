@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import TopMenu from './TopMenu';
-import Library from './BottomMenu';
+import BottomMenu from './BottomMenu';
 
 const Sidebar = () => {
   const minWidth: number = 68,
@@ -43,7 +43,6 @@ const Sidebar = () => {
       */
       if (!isClicked) return;
       setWidth((w) => {
-        console.log(e.movementX);
         const updated = actualWidth.current + e.movementX;
 
         if (updated > actualWidth.current) {
@@ -112,7 +111,7 @@ const Sidebar = () => {
     >
       <div className='flex h-full w-full flex-col gap-2'>
         <TopMenu expanded={width !== minWidth} />
-        <Library expand={expand} expanded={width !== minWidth} />
+        <BottomMenu expand={expand} expanded={width !== minWidth}/>
       </div>
       <div
         className={`h-full w-0.5 ${

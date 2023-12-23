@@ -17,15 +17,30 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 import { Button } from '../ui/button';
 
 import { signOut } from 'next-auth/react';
+import { useState } from 'react';
 
 const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
   user,
 }) => {
+  const [open, setIsOpen] = useState<boolean>(false)
+
   return (
-    <Dialog>
+    <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -39,28 +54,25 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
         <DropdownMenuContent>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <DialogTrigger asChild>
-              <Button
-                className='text-sm font-normal'
-                variant={'skeleton'}
-                size={'skeleton'}
-              >
-                Sign Out
-              </Button>
-            </DialogTrigger>
+          <DropdownMenuItem onSelect={()=>setIsOpen(true)}>
+            Sign Out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className='text-xl'>Are you sure?</DialogTitle>
-        </DialogHeader>
-        <Button onClick={() => signOut()} variant={'pink'}>
-          Sign Out
-        </Button>
-      </DialogContent>
-    </Dialog>
+      <AlertDialog open={open} onOpenChange={setIsOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button onClick={() => signOut()} variant={'pink'}>
+              Sign Out
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

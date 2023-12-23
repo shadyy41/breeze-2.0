@@ -2,7 +2,7 @@ import { PiPlaylistFill } from 'react-icons/pi';
 import { Button } from '../ui/button';
 import UploadButton from './UploadButton';
 
-const Library: React.FC<{
+const BottomMenu: React.FC<{
   expand: () => void;
   expanded: boolean;
 }> = ({ expand, expanded }) => {
@@ -24,4 +24,4 @@ const Library: React.FC<{
   );
 };
 
-export default Library;
+export default BottomMenu;

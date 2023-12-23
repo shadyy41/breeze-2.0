@@ -9,7 +9,7 @@ const Navigation = () => {
   return (
     <nav className='flex gap-2'>
       <Button
-        variant={'secondary'}
+        variant={'outline'}
         size={'icon'}
         className='rounded-full'
         onClick={() => router.back()}
@@ -17,7 +17,7 @@ const Navigation = () => {
         <PiCaretLeftBold className='text-lg' />
       </Button>
       <Button
-        variant={'secondary'}
+        variant={'outline'}
         size={'icon'}
         className='rounded-full'
         onClick={() => router.forward()}
