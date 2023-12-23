@@ -25,6 +25,7 @@ export const {
         };
         session.supabaseAccessToken = jwt.sign(payload, signingSecret);
       }
+      session.user.id = user.id;
       return session;
     },
   },
