@@ -129,15 +129,14 @@ const Player = () => {
 
     const new_volume = parseFloat(e.target.value);
 
-    if(new_volume!=0){
+    if (new_volume != 0) {
       audio.volume = new_volume;
       setVolume(new_volume);
-      if(isMuted) setIsMuted(false)
-    }
-    else{
-      setIsMuted(true)
-      audio.volume = 0
-      setVolume(0)
+      if (isMuted) setIsMuted(false);
+    } else {
+      setIsMuted(true);
+      audio.volume = 0;
+      setVolume(0);
     }
   };
 
@@ -147,10 +146,10 @@ const Player = () => {
     audio.currentTime = audio.duration;
   };
 
-  const openQueue = () =>{
-    if(path!=='/library/queue') router.push('/library/queue')
-    else router.back()
-  }
+  const openQueue = () => {
+    if (path !== '/library/queue') router.push('/library/queue');
+    else router.back();
+  };
 
   return (
     <>
@@ -226,7 +225,7 @@ const Player = () => {
               onClick={openQueue}
               className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
             >
-              {path==='/library/queue' ? <PiQueueFill/> : <PiQueue/>}
+              {path === '/library/queue' ? <PiQueueFill /> : <PiQueue />}
             </button>
             <button
               onClick={toggleMute}

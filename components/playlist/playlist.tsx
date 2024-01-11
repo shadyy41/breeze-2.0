@@ -126,7 +126,9 @@ const MyTableRow = ({
           onClick={handleClick}
           className='hidden flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 group-hover:flex'
         >
-          {playing && current_song?.playlist_id===playlist.id && current_song?.id === song.id ? (
+          {playing &&
+          current_song?.playlist_id === playlist.id &&
+          current_song?.id === song.id ? (
             <PiPauseFill />
           ) : (
             <PiPlayFill />
@@ -144,7 +146,10 @@ const MyTableRow = ({
         <p className='truncate'>
           {is_upload ? song.created_at : song.date_added}
         </p>
-        <TableDropdown song={{...song, playlist_id: playlist.id}} is_upload={is_upload} />
+        <TableDropdown
+          song={{ ...song, playlist_id: playlist.id }}
+          is_upload={is_upload}
+        />
       </div>
     </div>
   );
@@ -152,7 +157,7 @@ const MyTableRow = ({
 
 const TableDropdown = ({
   song,
-  is_upload
+  is_upload,
 }: {
   song: CurrentSong;
   is_upload: boolean;

@@ -29,7 +29,7 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
   user,
 }) => {
   const [open, setIsOpen] = useState<boolean>(false);
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   return (
     <>
@@ -50,7 +50,11 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onSelect={() => toast({description: 'Feature not implemented yet.'})}>
+          <DropdownMenuItem
+            onSelect={() =>
+              toast({ description: 'Feature not implemented yet.' })
+            }
+          >
             Edit Name
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

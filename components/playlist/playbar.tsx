@@ -34,7 +34,7 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
   const router = useRouter();
   const play_playlist = usePlayerStore((s) => s.play_playlist);
   const queue = usePlayerStore((s) => s.queue);
-  const push_song = usePlayerStore((s)=>s.push_song)
+  const push_song = usePlayerStore((s) => s.push_song);
   const playing = usePlayerStore((s) => s.playing);
   const current_song = usePlayerStore((s) => s.current_song);
   const audio = usePlayerStore((s) => s.audio);
@@ -81,12 +81,12 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
     }
   };
 
-  const addToQueue = () =>{
-    for(const song of playlist.songs){
-      push_song({...song, playlist_id: playlist.id})
+  const addToQueue = () => {
+    for (const song of playlist.songs) {
+      push_song({ ...song, playlist_id: playlist.id });
     }
-    toast({description: 'Added playlist to the queue.'})
-  }
+    toast({ description: 'Added playlist to the queue.' });
+  };
 
   return (
     <div className='flex w-full items-center gap-4 px-2'>
@@ -104,12 +104,14 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onSelect={()=>toast({description: 'Feature not implemented yet :)'})}>
+          <DropdownMenuItem
+            onSelect={() =>
+              toast({ description: 'Feature not implemented yet :)' })
+            }
+          >
             Edit Details
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={addToQueue}
-          >
+          <DropdownMenuItem onSelect={addToQueue}>
             Add To Queue
           </DropdownMenuItem>
           <DropdownMenuSeparator />

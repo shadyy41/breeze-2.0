@@ -1,8 +1,7 @@
 import { Playlist, Song } from '@/types/types';
 import { create } from 'zustand';
 
-export type CurrentSong = Song & {playlist_id: string}
-
+export type CurrentSong = Song & { playlist_id: string };
 
 type PlayerQueue = {
   songs: CurrentSong[];
@@ -45,7 +44,7 @@ const usePlayerStore = create<State & Action>()((set) => ({
     })),
   play_playlist: (playlist, idx) =>
     set((state) => ({
-      current_song: {...playlist.songs[idx], playlist_id: playlist.id},
+      current_song: { ...playlist.songs[idx], playlist_id: playlist.id },
       queue: {
         ...state.queue,
         songs: [],
@@ -69,7 +68,10 @@ const usePlayerStore = create<State & Action>()((set) => ({
       }
       if (playlist) {
         return {
-          current_song: {...playlist.songs[playlist.idx], playlist_id: playlist.id},
+          current_song: {
+            ...playlist.songs[playlist.idx],
+            playlist_id: playlist.id,
+          },
           queue: {
             ...state.queue,
             playlist: {
@@ -87,9 +89,19 @@ const usePlayerStore = create<State & Action>()((set) => ({
     set((state) => ({
       queue: { ...state.queue, repeat: !state.queue.repeat },
     })),
-  play_from_queue: (song, idx)=>set((state)=>{
-    return ({current_song: song, queue: {...state.queue, songs: [...state.queue.songs.slice(0, idx), ...state.queue.songs.slice(idx+1)]}})
-  })
+  play_from_queue: (song, idx) =>
+    set((state) => {
+      return {
+        current_song: song,
+        queue: {
+          ...state.queue,
+          songs: [
+            ...state.queue.songs.slice(0, idx),
+            ...state.queue.songs.slice(idx + 1),
+          ],
+        },
+      };
+    }),
 }));
 
 export default usePlayerStore;
