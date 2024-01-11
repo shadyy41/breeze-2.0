@@ -1,7 +1,7 @@
-import UserButton from './UserButton';
-import Navigation from './Navigation';
+import UserButton from './user-button';
+import Navigation from './navigation';
 import { auth } from '@/lib/auth';
-import SignInButton from './SignInButton';
+import SignInButton from './signin-button';
 
 const Topbar = async () => {
   const session = await auth();

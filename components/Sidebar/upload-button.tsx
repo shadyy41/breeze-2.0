@@ -1,15 +1,15 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import { ChangeEvent } from 'react';
 import { Button } from '../ui/button';
 import { PiUploadSimpleFill } from 'react-icons/pi';
-import DropZone from './DropZone';
+import DropZone from './drop-zone';
 import { useCallback, useState } from 'react';
 import { FileRejection } from 'react-dropzone';
 import { useSession } from 'next-auth/react';
@@ -17,22 +17,18 @@ import { createClient } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { createSong } from '@/app/actions';
-
-interface SongData {
-  name: string;
-  songPath: string;
-  imagePath: string;
-}
-export type { SongData };
+import { v4 as uuidv4 } from 'uuid';
 
 const UploadButton: React.FC<{
   expanded: boolean;
 }> = ({ expanded }) => {
   const [selectedSongFile, setSelectedSongFile] = useState<File | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-
   const [songName, setSongName] = useState<string>('');
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isPrivate, setIsPrivate] = useState<boolean>(true);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+
   const maxSongSizeInBytes: number = 6291456;
   const maxImageSizeInBytes: number = 1048576;
   const acceptedAudioPrefix: string = 'audio/';
@@ -44,70 +40,6 @@ const UploadButton: React.FC<{
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSongName(e.target.value);
   };
-
-  // const handleUpload = useCallback(async () => {
-  //   if (!selectedSongFile || !session || !selectedImageFile) return;
-  //   const { supabaseAccessToken } = session;
-
-  //   const supabase = createClient(
-  //     process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-  //     process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-  //     {
-  //       global: {
-  //         headers: {
-  //           Authorization: `Bearer ${supabaseAccessToken}`,
-  //         },
-  //       },
-  //     }
-  //   );
-
-  //   setUploading(true);
-
-  //   const { data, error } = await supabase.storage
-  //     .from('songs')
-  //     .upload(`${session.user.id}/songs/${songName}`, selectedSongFile);
-  //   if (error) {
-  //     console.log(error);
-  //     if (error.message === 'The resource already exists') {
-  //       toast({
-  //         description: 'Song with the same name already exists.',
-  //         variant: 'destructive',
-  //       });
-  //     } else {
-  //       toast({
-  //         description: 'Upload failed.',
-  //         variant: 'destructive',
-  //       });
-  //     }
-  //   } else {
-  //     const songData: SongData = {
-  //       name: songName,
-  //       path: data.path,
-  //     };
-
-  //     const result2 = await supabase.storage
-  //       .from('songs')
-  //       .upload(`${session.user.id}/thumbs/${songName}`, selectedImageFile);
-
-  //     const success: boolean = await createSong(songData);
-
-  //     if (success) {
-  //       toast({
-  //         description: 'File uploaded successfully.',
-  //         variant: 'default',
-  //       });
-  //     } else {
-  //       /* Further error handling is ram bharose 🤞 */
-  //       const { data, error } = await supabase.storage.from('songs').remove([songData.path])
-  //       toast({
-  //         description: 'Upload failed.',
-  //         variant: 'destructive',
-  //       });
-  //     }
-  //   }
-
-  //   setUploading(false);
-  // }, [selectedSongFile, session, songName, toast, selectedImageFile]);
 
   const handleUpload = useCallback(async () => {
     if (!selectedSongFile || !session || !selectedImageFile) return;
@@ -129,10 +61,11 @@ const UploadButton: React.FC<{
     try {
       setUploading(true);
 
-      // Upload Song
+      const uniqueSongName = songName + uuidv4().toString();
+
       const { data: songData, error: songError } = await supabase.storage
         .from('songs')
-        .upload(`${session.user.id}/songs/${songName}`, selectedSongFile);
+        .upload(`${session.user.id}/songs/${uniqueSongName}`, selectedSongFile);
 
       if (songError) {
         handleError(songError, 'Song');
@@ -142,7 +75,10 @@ const UploadButton: React.FC<{
       // Upload Image
       const { data: imageData, error: imageError } = await supabase.storage
         .from('songs')
-        .upload(`${session.user.id}/thumbs/${songName}`, selectedImageFile);
+        .upload(
+          `${session.user.id}/thumbs/${uniqueSongName}`,
+          selectedImageFile
+        );
 
       if (imageError) {
         handleError(imageError, 'Image');
@@ -154,16 +90,17 @@ const UploadButton: React.FC<{
       // Create Song
       const success: boolean = await createSong({
         name: songName,
-        songPath: songData.path,
-        imagePath: imageData.path,
+        song_path: songData.path,
+        thumb_path: imageData.path,
+        private: isPrivate,
       });
 
       if (success) {
         toast({
-          description: 'File uploaded successfully.',
+          description: 'Song uploaded successfully.',
           variant: 'default',
         });
-        handleCancel();
+        setDialogOpen(false);
       } else {
         // Rollback on song creation failure
         await supabase.storage.from('songs').remove([songData.path]);
@@ -174,12 +111,12 @@ const UploadButton: React.FC<{
         });
       }
     } catch (uploadError) {
-      console.error('Unexpected error during upload:', uploadError);
       toast({
         description: 'Unexpected error during upload.',
         variant: 'destructive',
       });
     } finally {
+      handleCancel();
       setUploading(false);
     }
 
@@ -203,6 +140,7 @@ const UploadButton: React.FC<{
     toast,
     selectedImageFile,
     setUploading,
+    isPrivate,
   ]);
 
   const handleCancel = () => {
@@ -245,7 +183,6 @@ const UploadButton: React.FC<{
       }
       acceptedFiles.forEach((file) => {
         if (file.type.startsWith(acceptedImagePrefix)) {
-          console.log(file);
           const img = new Image();
           img.src = URL.createObjectURL(file);
           img.onload = () => {
@@ -273,7 +210,7 @@ const UploadButton: React.FC<{
 
   if (!session) {
     return (
-      <footer className='full'>
+      <div className='full'>
         <Button
           variant={'skeleton'}
           size={'skeleton'}
@@ -288,13 +225,34 @@ const UploadButton: React.FC<{
           <PiUploadSimpleFill className='flex-shrink-0 text-2xl' />
           {expanded && 'Upload Song'}
         </Button>
-      </footer>
+      </div>
+    );
+  }
+
+  if (!session.user.admin && session.user.upload_count >= 4) {
+    return (
+      <div className='full'>
+        <Button
+          variant={'skeleton'}
+          size={'skeleton'}
+          className='gap-4 transition-colors hover:text-zinc-100'
+          onClick={() => {
+            toast({
+              description: 'You can only upload upto 4 songs.',
+              variant: 'destructive',
+            });
+          }}
+        >
+          <PiUploadSimpleFill className='flex-shrink-0 text-2xl' />
+          {expanded && 'Upload Song'}
+        </Button>
+      </div>
     );
   }
 
   return (
-    <footer className='w-full'>
-      <Dialog>
+    <div className='w-full'>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
           <Button
             variant={'skeleton'}
@@ -318,33 +276,22 @@ const UploadButton: React.FC<{
           <DropZone
             onDrop={onDropSong}
             maxSizeInBytes={maxSongSizeInBytes}
-            innerText='Drag & drop a song, or click to select (limit: 6 MB)'
+            innerText={`${
+              selectedSongFile
+                ? `Selected File: ${selectedSongFile.name}`
+                : 'Drag & drop a song, or click to select (limit: 6 MB)'
+            }`}
           />
-          <div className='text-sm'>
-            {selectedSongFile ? (
-              <p>
-                Selected File:{' '}
-                <span className='text-pink-700'>{selectedSongFile.name}</span>
-              </p>
-            ) : (
-              <p>No song file selected.</p>
-            )}
-          </div>
           <DropZone
             onDrop={onDropImage}
             maxSizeInBytes={maxImageSizeInBytes}
-            innerText='Drag & drop an image file, or click to select (limit: 1MB, aspect-ratio: 1/1)'
+            innerText={`${
+              selectedImageFile
+                ? `Selected File: ${selectedImageFile.name}`
+                : 'Drag & drop an image, or click to select (limit: 6 MB, ratio: 1/1)'
+            }`}
           />
-          <div className='text-sm'>
-            {selectedImageFile ? (
-              <p>
-                Selected File:{' '}
-                <span className='text-pink-700'>{selectedImageFile.name}</span>
-              </p>
-            ) : (
-              <p>No image file selected.</p>
-            )}
-          </div>
+
           <Button
             onClick={handleUpload}
             variant={'pink'}
@@ -354,14 +301,32 @@ const UploadButton: React.FC<{
           >
             {uploading ? 'Uploading' : 'Upload'}
           </Button>
+
           {(selectedSongFile || selectedImageFile) && (
-            <Button onClick={handleCancel} variant={'outline'}>
+            <Button
+              onClick={handleCancel}
+              variant={'outline'}
+              disabled={uploading}
+            >
               Cancel
             </Button>
           )}
+
+          {session.user.admin && (
+            <div className='flex flex-col items-start gap-2 rounded-md border border-zinc-800 p-4'>
+              <p className='text-xs'>
+                Admin Only - {isPrivate ? 'Private Song' : 'Public Song'}
+              </p>
+              <Switch
+                checked={isPrivate}
+                onCheckedChange={setIsPrivate}
+                className=''
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-    </footer>
+    </div>
   );
 };
 

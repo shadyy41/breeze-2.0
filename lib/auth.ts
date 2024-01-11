@@ -26,6 +26,9 @@ export const {
         session.supabaseAccessToken = jwt.sign(payload, signingSecret);
       }
       session.user.id = user.id;
+      session.user.admin = user.admin;
+      //@ts-expect-error for some reason, int is being parsed into a Date by nextauth
+      session.user.upload_count = user.upload_count.getTime();
       return session;
     },
   },

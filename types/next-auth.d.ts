@@ -7,6 +7,13 @@ declare module 'next-auth' {
       name: string;
       image: string;
       id: string;
+      admin: boolean;
+      upload_count: number;
     } & DefaultSession['user'];
+  }
+
+  interface User {
+    admin?: boolean;
+    upload_count?: number;
   }
 }

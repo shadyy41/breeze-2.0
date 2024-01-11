@@ -13,12 +13,12 @@ const DropZone: React.FC<{
   return (
     <div
       {...getRootProps()}
-      className={`dropzone ${
+      className={`${
         isDragActive ? 'active' : ''
-      } flex flex-col items-center justify-center gap-4 rounded-md border-2 border-dashed border-pink-800 p-4 transition-colors hover:cursor-pointer hover:border-pink-600 focus-visible:border-pink-600 focus-visible:outline-none active:border-pink-600`}
+      } flex w-full flex-col items-center justify-center gap-4 rounded-md border-2 border-dashed border-pink-800 p-4 transition-colors hover:cursor-pointer hover:border-pink-600 focus-visible:border-pink-600 focus-visible:outline-none active:border-pink-600`}
     >
       <input {...getInputProps()} />
-      <p className='text-center text-sm font-light'>{innerText}</p>
+      <p className='break-all text-center text-xs'>{innerText}</p>
     </div>
   );
 };

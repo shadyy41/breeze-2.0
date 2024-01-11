@@ -10,34 +10,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-
-import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 import { Button } from '../ui/button';
 
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
+import Link from 'next/link';
+import { useToast } from '../ui/use-toast';
 
 const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
   user,
 }) => {
   const [open, setIsOpen] = useState<boolean>(false);
+  const { toast } = useToast()
 
   return (
     <>
@@ -48,11 +40,22 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
             size={'skeleton'}
             className='relative aspect-square h-8 flex-shrink-0 overflow-hidden rounded-full'
           >
-            <Image src={user.image} alt='User image' sizes='2rem' fill />
+            <Image
+              src={user.image}
+              alt='User image'
+              sizes='2rem'
+              fill
+              priority
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={() => toast({description: 'Feature not implemented yet.'})}>
+            Edit Name
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href='/library'>Your Library</Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setIsOpen(true)}>
             Sign Out
