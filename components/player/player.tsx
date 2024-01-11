@@ -1,6 +1,6 @@
 'use client';
 import usePlayerStore from '@/lib/store';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, MouseEvent } from 'react';
 import {
   PiPlayFill,
   PiPauseFill,
@@ -12,6 +12,7 @@ import {
   PiRepeatOnceFill,
   PiQueue,
   PiQueueFill,
+  PiArrowDownBold,
 } from 'react-icons/pi';
 import CustomProgress from './custom-progress';
 import Image from 'next/image';
@@ -21,7 +22,7 @@ const Player = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(0.3);
 
   const progressBarRef = useRef<HTMLInputElement | null>(null);
   const volumeBarRef = useRef<HTMLInputElement | null>(null);
@@ -37,6 +38,7 @@ const Player = () => {
   const setPlaying = usePlayerStore((s) => s.setPlaying);
   const setAudio = usePlayerStore((s) => s.setAudio);
   const toggleRepeat = usePlayerStore((s) => s.toggleRepeat);
+  const [expanded, setExpanded] = useState<boolean>(false);
 
   const formatTime = (time: number): string => {
     const minutes = Math.floor(time / 60);
@@ -97,7 +99,9 @@ const Player = () => {
     };
   }, [audio, queue.repeat]);
 
-  const togglePlay = () => {
+  const togglePlay = (e: MouseEvent) => {
+    e.stopPropagation();
+
     if (!audio || audio.src == '') return;
 
     if (playing) {
@@ -108,6 +112,7 @@ const Player = () => {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     if (!audio || audio.src == '') return;
 
     const newTime = parseFloat(e.target.value);
@@ -140,7 +145,8 @@ const Player = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (e: MouseEvent) => {
+    e.stopPropagation();
     if (!audio || audio.src == '') return;
 
     audio.currentTime = audio.duration;
@@ -153,7 +159,7 @@ const Player = () => {
 
   return (
     <>
-      <div className='hidden h-24 w-full flex-shrink-0 grid-cols-2 p-2 px-4 text-sm md:flex'>
+      <div className='hidden h-24 w-full flex-shrink-0 p-2 px-4 text-sm md:flex'>
         <div className='flex flex-1 justify-start'>
           <div className='flex flex-1 items-center justify-start gap-3'>
             <div className='relative aspect-square h-full shrink-0 overflow-hidden rounded-md'>
@@ -248,58 +254,145 @@ const Player = () => {
           </div>
         </div>
       </div>
-      <div className='block h-24 flex-shrink-0 py-2 md:hidden'>
-        <div className='relative flex h-full w-full flex-shrink-0 grid-cols-2 rounded-md border border-zinc-800 bg-zinc-950 p-2 pb-3 text-sm'>
-          <div className='flex flex-1 justify-between'>
-            <div className='flex flex-1 items-center justify-start gap-3'>
-              <div className='relative aspect-square h-full shrink-0 overflow-hidden rounded-md'>
-                {current_song ? (
-                  <Image
-                    src={current_song.thumb_path}
-                    alt='song thumbnail'
-                    fill
-                  />
-                ) : (
-                  <div className='h-full w-full bg-zinc-900'></div>
-                )}
+      {expanded ? (
+        <div
+          className={`absolute left-1/2 block h-fit w-[calc(100%-20px)] flex-shrink-0 -translate-x-1/2 transform py-2 md:hidden ${
+            audio?.src.length ? 'bottom-[72px]' : 'bottom-full'
+          }`}
+        >
+          <div className='relative flex h-fit w-full flex-shrink-0 flex-col gap-6 rounded-md bg-zinc-900/75 p-6 text-sm backdrop-blur'>
+            <div className='flex w-full flex-grow flex-col items-center justify-center gap-8'>
+              <div className='relative aspect-square w-full max-w-xs shrink-0 overflow-hidden rounded-md'>
+                <Image
+                  src={current_song!.thumb_path}
+                  alt='song thumbnail'
+                  fill
+                />
               </div>
-              {current_song && <p className='truncate'>{current_song.name}</p>}
+              <p className='flex-shrink-0 text-lg'>{current_song!.name}</p>
             </div>
-            <div className='flex flex-1 items-center justify-end gap-4 pr-4 text-xl'>
-              <button
-                onClick={toggleMute}
-                className='flex flex-shrink-0 rotate-180 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
-              >
-                <PiFastForwardFill />
-              </button>
-              <button
-                onClick={togglePlay}
-                className='flex flex-shrink-0 transform items-center justify-center rounded-full text-2xl text-zinc-400 ring-offset-zinc-950 transition-all duration-300 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:scale-90'
-              >
-                {playing ? <PiPauseFill /> : <PiPlayFill />}
-              </button>
-              <button
-                onClick={toggleMute}
-                className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
-              >
-                <PiFastForwardFill />
-              </button>
-            </div>
-          </div>
-          <div className='absolute bottom-0 left-0 h-fit w-full px-2 '>
-            <div className='w-full'>
-              <CustomProgress
-                currentValue={currentTime}
-                maxValue={duration}
-                handleChange={handleSeek}
-                width={audio ? (audio.currentTime / audio.duration) * 100 : 0}
-                progressBarRef={progressBarRef}
-                step={1}
-              />
+            <div className='grid w-full grid-cols-1 items-center justify-center gap-4'>
+              <div className='flex w-full flex-col items-center justify-center gap-2 text-xs text-zinc-500'>
+                <CustomProgress
+                  currentValue={currentTime}
+                  maxValue={duration}
+                  handleChange={handleSeek}
+                  width={audio ? (audio.currentTime / audio.duration) * 100 : 0}
+                  progressBarRef={progressBarRef}
+                  step={1}
+                />
+
+                <div className='flex w-full items-start justify-between'>
+                  <div>{formatTime(currentTime)}</div>{' '}
+                  <div>{formatTime(duration)}</div>
+                </div>
+              </div>
+              <div className='flex h-fit items-center justify-between gap-4 text-3xl'>
+                <button
+                  onClick={toggleMute}
+                  className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
+                >
+                  <PiShuffleAngular />
+                </button>
+                <button
+                  onClick={toggleMute}
+                  className='flex flex-shrink-0 rotate-180 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
+                >
+                  <PiFastForwardFill />
+                </button>
+                <button
+                  onClick={togglePlay}
+                  className='flex flex-shrink-0 transform items-center justify-center rounded-full bg-zinc-200 p-2 text-xl text-black  ring-offset-zinc-950 transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:scale-95'
+                >
+                  {playing ? <PiPauseFill /> : <PiPlayFill />}
+                </button>
+                <button
+                  onClick={handleNext}
+                  className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
+                >
+                  <PiFastForwardFill />
+                </button>
+                <button
+                  onClick={toggleRepeat}
+                  className={`flex flex-shrink-0 items-center justify-center rounded-full ${
+                    queue.repeat ? 'text-zinc-200' : 'text-zinc-400'
+                  } relative ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2`}
+                >
+                  {queue.repeat ? <PiRepeatOnceFill /> : <PiRepeatFill />}
+                </button>
+              </div>
+              <div className='flex h-fit items-center justify-between gap-4 text-2xl'>
+                <button
+                  onClick={() => setExpanded((s) => !s)}
+                  className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
+                >
+                  <PiArrowDownBold />
+                </button>
+                <button
+                  onClick={() => {
+                    openQueue();
+                    setExpanded(false);
+                  }}
+                  className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
+                >
+                  {path === '/library/queue' ? <PiQueueFill /> : <PiQueue />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div
+          className={`absolute left-1/2 block h-20 w-[calc(100%-20px)] flex-shrink-0 -translate-x-1/2 transform py-2 md:hidden ${
+            audio?.src.length ? 'bottom-[72px]' : 'bottom-full'
+          }`}
+          onClick={() => setExpanded((s) => !s)}
+        >
+          <div className='relative flex h-full w-full flex-shrink-0 rounded-md bg-zinc-900/75 p-2 pb-3 text-sm backdrop-blur'>
+            <div className='flex w-full flex-grow items-center justify-between'>
+              <div className='flex items-center justify-start gap-3'>
+                <div className='relative h-12 w-12 shrink-0 overflow-hidden rounded-md'>
+                  {current_song ? (
+                    <Image
+                      src={current_song.thumb_path}
+                      alt='song thumbnail'
+                      fill
+                    />
+                  ) : (
+                    <div className='h-full w-full bg-zinc-900'></div>
+                  )}
+                </div>
+                {current_song && (
+                  <p className='truncate'>{current_song.name}</p>
+                )}
+              </div>
+              <div className='flex items-center justify-end pr-2 text-lg'>
+                <button
+                  onClick={togglePlay}
+                  className='flex flex-shrink-0 transform items-center justify-center rounded-full text-2xl text-zinc-400 ring-offset-zinc-950 transition-all duration-300 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:scale-90'
+                >
+                  {playing ? <PiPauseFill /> : <PiPlayFill />}
+                </button>
+              </div>
+            </div>
+            <div
+              className='absolute bottom-0 left-0 h-fit w-full px-2'
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className='w-full'>
+                <CustomProgress
+                  currentValue={currentTime}
+                  maxValue={duration}
+                  handleChange={handleSeek}
+                  width={audio ? (audio.currentTime / audio.duration) * 100 : 0}
+                  progressBarRef={progressBarRef}
+                  step={1}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

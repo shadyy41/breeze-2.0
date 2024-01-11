@@ -92,7 +92,7 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
     <div className='flex w-full items-center gap-4 px-2'>
       <button
         onClick={handlePlay}
-        className='flex flex-shrink-0 transform items-center justify-center rounded-full bg-zinc-300 p-2.5 text-xl text-black ring-offset-zinc-950 transition-all  duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:scale-95 md:p-3 md:text-2xl'
+        className='flex flex-shrink-0 transform items-center justify-center rounded-full bg-zinc-300 p-3 text-2xl text-black  ring-offset-zinc-950 transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:scale-95'
       >
         {isCurrentPlaying ? <PiPauseFill /> : <PiPlayFill />}
       </button>

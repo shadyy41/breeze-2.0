@@ -58,13 +58,13 @@ const NewPlaylistButton: React.FC<{
           className='gap-4 transition-colors hover:text-zinc-100'
           onClick={() => {
             toast({
-              description: 'You must be signed in to upload songs.',
+              description: 'You must be signed in to create playlists.',
               variant: 'destructive',
             });
           }}
         >
           <PiMusicNotesPlusFill className='flex-shrink-0 text-2xl' />
-          {expanded && 'Upload Song'}
+          {expanded && 'Create Playlist'}
         </Button>
       </footer>
     );

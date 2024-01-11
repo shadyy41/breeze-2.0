@@ -5,6 +5,7 @@ import {
   PiPauseFill,
   PiPlayFill,
   PiDotsThreeOutlineFill,
+  PiDotsThreeOutlineVerticalFill,
 } from 'react-icons/pi';
 
 import PlaylistIcon from '@/components/playlist-icon';
@@ -45,12 +46,12 @@ const Playlist = ({
 }) => {
   return (
     <ScrollArea className='h-full w-full bg-zinc-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(39,39,42,0.8),rgba(255,255,255,0))]'>
-      <div className='grid w-full grid-cols-1 gap-2 p-3 md:gap-4 md:p-5'>
-        <header className='flex h-28 w-full gap-4 p-2 md:h-64 md:gap-6'>
-          <div className='aspect-square h-full flex-shrink-0 overflow-hidden rounded shadow'>
+      <div className='grid w-full grid-cols-1 gap-2 p-3 pb-32 md:gap-4 md:p-5 md:pb-5'>
+        <header className='flex h-fit w-full flex-col items-center gap-4 p-2 md:h-64 md:flex-row md:gap-6'>
+          <div className='aspect-square h-full w-3/4 max-w-xs flex-shrink-0 overflow-hidden rounded shadow md:w-fit'>
             <PlaylistIcon songs={playlist.songs} />
           </div>
-          <div className='flex w-full max-w-[calc(100%-128px)] flex-col justify-center gap-2 md:max-w-[calc(100%-296px)]'>
+          <div className='flex w-full flex-col justify-center gap-2 md:max-w-[calc(100%-296px)]'>
             <Badge variant={'pink'}>Private</Badge>
             <h2 className='w-full truncate text-2xl font-medium md:text-5xl md:leading-relaxed'>
               {playlist.name}
@@ -64,7 +65,7 @@ const Playlist = ({
               #
             </div>
             <div className='w-2/5 truncate'>Title</div>
-            <div className='w-2/5 truncate'>
+            <div className='hidden w-2/5 truncate md:flex'>
               {is_upload ? 'Upload Date' : 'Date Added'}
             </div>
           </div>
@@ -118,7 +119,7 @@ const MyTableRow = ({
 
   return (
     <div
-      className='group flex h-12 w-full items-center justify-start gap-4 rounded-md px-2 py-1 text-sm hover:bg-zinc-800 md:h-16 md:px-4 md:py-2'
+      className='group flex h-14 w-full items-center justify-start gap-4 rounded-md px-2 py-1 text-sm hover:bg-zinc-800 md:h-16 md:px-4 md:py-2'
       onClick={handleClick}
     >
       <div className='flex w-6 flex-shrink-0 items-center justify-center truncate'>
@@ -136,16 +137,22 @@ const MyTableRow = ({
         </button>
         <p className='truncate group-hover:invisible'>{idx + 1}</p>
       </div>
-      <div className='flex h-full w-2/5 items-center gap-2'>
+      <div className='flex h-full w-full items-center gap-2 md:w-2/5'>
         <div className='relative aspect-square h-full flex-shrink-0 overflow-hidden rounded'>
           <Image src={song.thumb_path} alt='Song thumb' fill sizes='48px' />
         </div>
         <p className='truncate'>{song.name}</p>
       </div>
-      <div className='flex h-full w-2/5 items-center gap-3'>
+      <div className='hidden h-full w-2/5 items-center gap-3 md:flex'>
         <p className='truncate'>
           {is_upload ? song.created_at : song.date_added}
         </p>
+        <TableDropdown
+          song={{ ...song, playlist_id: playlist.id }}
+          is_upload={is_upload}
+        />
+      </div>
+      <div className='md:hidden'>
         <TableDropdown
           song={{ ...song, playlist_id: playlist.id }}
           is_upload={is_upload}
@@ -230,8 +237,9 @@ const TableDropdown = ({
     <div className='relative flex items-center' onClick={stopPropagation}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className='invisible flex flex-shrink-0 items-center justify-center rounded-full text-xl text-zinc-400 ring-offset-zinc-800 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 group-hover:visible'>
-            <PiDotsThreeOutlineFill />
+          <button className='flex w-8 flex-shrink-0 items-center justify-center rounded-full text-xl text-zinc-400 ring-offset-zinc-800 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 md:invisible md:group-hover:visible'>
+            <PiDotsThreeOutlineFill className='hidden md:flex' />
+            <PiDotsThreeOutlineVerticalFill className='md:hidden' />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>

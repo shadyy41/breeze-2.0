@@ -42,7 +42,7 @@ export async function createPlaylist(playlistName: string): Promise<boolean> {
     await sql`
     insert into next_auth.playlists (user_id, name) values (${session.user.id}, ${playlistName})
     `;
-    revalidatePath('/library');
+    revalidatePath('/', 'layout');
     return true;
   } catch (e) {
     console.log(e, 'ERROR WHILE CREATING PLAYLIST IN PSQL.');
@@ -146,7 +146,7 @@ export async function deletePlaylist(id: string) {
       WHERE id = ${id};
       `;
 
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
     return true;
   } catch (error) {
     console.log(error, 'ERROR DELETING SONG');
