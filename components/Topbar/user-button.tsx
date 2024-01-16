@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import toast from 'react-hot-toast';
 
 import {
   AlertDialog,
@@ -23,13 +24,11 @@ import { Button } from '../ui/button';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useToast } from '../ui/use-toast';
 
 const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
   user,
 }) => {
   const [open, setIsOpen] = useState<boolean>(false);
-  const { toast } = useToast();
 
   return (
     <>
@@ -51,9 +50,7 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem
-            onSelect={() =>
-              toast({ description: 'Feature not implemented yet.' })
-            }
+            onSelect={() => toast.error('Feature not implemented yet.')}
           >
             Edit Name
           </DropdownMenuItem>

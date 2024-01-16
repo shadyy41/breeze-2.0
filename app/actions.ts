@@ -2,9 +2,8 @@
 import { auth } from '@/lib/auth';
 import sql from '@/lib/db';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
-import { redirect } from 'next/navigation';
 
 export async function createSong(song: {
   name: string;
@@ -12,11 +11,10 @@ export async function createSong(song: {
   thumb_path: string;
   private: boolean;
 }): Promise<boolean> {
-  const session = await auth();
-  if (!session || (!session.user.admin && session.user.upload_count >= 4))
-    return false;
-
   try {
+    const session = await auth();
+    if (!session || (!session.user.admin && session.user.upload_count >= 4))
+      return false;
     await sql.begin(async (sql) => {
       await sql`
       insert into next_auth.songs (song_path, thumb_path, name, private, user_id) values (${song.song_path}, ${song.thumb_path}, ${song.name}, ${song.private}, ${session.user.id})
@@ -25,7 +23,7 @@ export async function createSong(song: {
       update next_auth.users set upload_count = upload_count + 1 where id = ${session.user.id}
       `;
     });
-    revalidatePath('/');
+    revalidateTag('user_uploads')
     return true;
   } catch (error) {
     console.error('Transaction failed:', error);
@@ -35,14 +33,13 @@ export async function createSong(song: {
 }
 
 export async function createPlaylist(playlistName: string): Promise<boolean> {
-  const session = await auth();
-  if (!session) return false;
-
   try {
+    const session = await auth();
+    if (!session) return false;
     await sql`
     insert into next_auth.playlists (user_id, name) values (${session.user.id}, ${playlistName})
     `;
-    revalidatePath('/', 'layout');
+    revalidateTag('user_playlists')
     return true;
   } catch (e) {
     console.log(e, 'ERROR WHILE CREATING PLAYLIST IN PSQL.');
@@ -61,7 +58,8 @@ export async function addToPlaylist(
       (${playlist_id}, ${song_id});
     `;
 
-    revalidatePath('/');
+    revalidateTag('user_playlists')
+    revalidateTag('playlist')
     return true;
   } catch (error) {
     console.log(error, 'ERROR ADDING SONG TO PLAYLIST');
@@ -107,7 +105,10 @@ export async function deleteSong(songId: string): Promise<boolean> {
         .remove([data[0].song_path, data[0].thumb_path]);
     });
 
-    revalidatePath('/');
+    revalidateTag('user_uploads');
+    revalidateTag('user_playlists')
+    revalidateTag('playlist')
+
     return true;
   } catch (error) {
     console.log(error, 'ERROR DELETING SONG');
@@ -127,7 +128,9 @@ export async function removeSong(playlist_id: string, song_id: string) {
       WHERE playlist_id = ${playlist_id} and song_id=${song_id};
       `;
 
-    revalidatePath('/');
+    revalidateTag('user_playlists')
+    revalidateTag('playlist')
+
     return true;
   } catch (error) {
     console.log(error, 'ERROR DELETING SONG');
@@ -146,33 +149,38 @@ export async function deletePlaylist(id: string) {
       WHERE id = ${id};
       `;
 
-    revalidatePath('/', 'layout');
+    revalidateTag('user_playlists')
+    revalidateTag('playlist')
     return true;
   } catch (error) {
     console.log(error, 'ERROR DELETING SONG');
     return false;
   }
 }
+export const getCachedUserPlaylists = unstable_cache(
+  async (id: string) => getUserPlaylists(),
+  ['user_playlists'],
+  { revalidate: 1800, tags: ['user_playlists'] }
+);
 
 export async function getUserPlaylists(): Promise<Playlist[]> {
-  const session = await auth();
-  if (!session) return [];
-
-  const { supabaseAccessToken } = session;
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${supabaseAccessToken}`,
-        },
-      },
-    }
-  );
-
   try {
+    const session = await auth();
+    if (!session) return [];
+
+    const { supabaseAccessToken } = session;
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
+      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${supabaseAccessToken}`,
+          },
+        },
+      }
+    );
     const data = await sql`
     SELECT
         playlists.id,
@@ -194,7 +202,9 @@ export async function getUserPlaylists(): Promise<Playlist[]> {
     WHERE
         playlists.user_id = ${session.user.id}
     GROUP BY
-        playlists.id, playlists.name;
+        playlists.id, playlists.name
+    ORDER BY
+        COUNT(songs.id) DESC;
     `;
 
     const res: Playlist[] = [];
@@ -236,7 +246,13 @@ export async function getUserPlaylists(): Promise<Playlist[]> {
   }
 }
 
-export async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
+export const getCachedUserUploads = unstable_cache(
+  async (id: string) => getUploadedSongs(),
+  ['user_uploads'],
+  { revalidate: 1800, tags: ['user_uploads'] }
+);
+
+async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
   try {
     const session = await auth();
 
@@ -293,28 +309,31 @@ export async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
   }
 }
 
-export async function getPlaylist(
-  id: string
-): Promise<ActionResponse<Playlist>> {
-  const session = await auth();
+export const getCachedPlaylist = unstable_cache(
+  async (id: string, user_id) => getPlaylist(id),
+  ['playlist'],
+  { revalidate: 1800, tags: ['playlist'] }
+);
 
-  if (!session) return null;
-
-  const { supabaseAccessToken } = session;
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${supabaseAccessToken}`,
-        },
-      },
-    }
-  );
-
+async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
   try {
+    const session = await auth();
+
+    if (!session) return null;
+
+    const { supabaseAccessToken } = session;
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
+      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${supabaseAccessToken}`,
+          },
+        },
+      }
+    );
     const data = await sql`
     SELECT
       p.id AS id,
@@ -383,11 +402,11 @@ async function generateSignedUrls(
 ) {
   const signedSongUrl = await supabase.storage
     .from('songs')
-    .createSignedUrl(songPath, 360000);
+    .createSignedUrl(songPath, 3600000);
 
   const signedThumbUrl = await supabase.storage
     .from('songs')
-    .createSignedUrl(thumbPath, 360000);
+    .createSignedUrl(thumbPath, 3600000);
 
   return { signedSongUrl, signedThumbUrl };
 }

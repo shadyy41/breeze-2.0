@@ -5,17 +5,43 @@ import {
   PiHouseFill,
   PiMagnifyingGlass,
   PiMagnifyingGlassFill,
+  PiMusicNotesPlusFill,
+  PiUploadSimpleFill,
 } from 'react-icons/pi';
 import { Button } from '../ui/button';
-import UploadButton from './upload-button';
-import NewPlaylistButton from './new-playlist-button';
+import UploadSongModal from './upload-song-modal';
+import CreatePlaylistModal from './create-playlist-modal';
 import { Separator } from '../ui/separator';
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import toast from 'react-hot-toast';
+import usePlayerStore from '@/lib/store';
 
-const TopMenu: React.FC<{
-  expand: () => void;
-  expanded: boolean;
-}> = ({ expand, expanded }) => {
+const TopMenu = () => {
   const path = usePathname();
+  const { data: session } = useSession();
+  const [createPlaylistOpen, setCreatePlaylistOpen] = useState<boolean>(false);
+  const [uploadSongOpen, setUploadSongOpen] = useState<boolean>(false);
+  const sidebar_expanded = usePlayerStore((s) => s.sidebar_expanded);
+
+  const handleCreatePlaylist = () => {
+    if (!session) {
+      toast.error('You must be signed in to create playlists.');
+    } else {
+      setCreatePlaylistOpen(true);
+    }
+  };
+
+  const handleUploadSong = () => {
+    if (!session) {
+      toast.error('You must be signed in to upload songs.');
+    } else if (!session.user.admin && session.user.upload_count >= 4) {
+      toast.error('You can only upload upto 4 songs.');
+    } else {
+      setUploadSongOpen(true);
+    }
+  };
+
   return (
     <div className='flex flex-col gap-5 rounded-md border border-zinc-800 bg-zinc-950 px-6 py-5 font-medium'>
       <Button variant={'skeleton'} size={'skeleton'} asChild>
@@ -30,7 +56,7 @@ const TopMenu: React.FC<{
           ) : (
             <PiHouse className='flex-shrink-0 text-2xl' />
           )}
-          {expanded && 'Home'}
+          {sidebar_expanded && 'Home'}
         </Link>
       </Button>
       <Button variant={'skeleton'} size={'skeleton'} asChild>
@@ -45,12 +71,34 @@ const TopMenu: React.FC<{
           ) : (
             <PiMagnifyingGlass className='flex-shrink-0 text-2xl' />
           )}
-          {expanded && 'Search'}
+          {sidebar_expanded && 'Search'}
         </Link>
       </Button>
       <Separator />
-      <NewPlaylistButton expanded={expanded} />
-      <UploadButton expanded={expanded} />
+      <Button
+        variant={'skeleton'}
+        size={'skeleton'}
+        className='gap-4 transition-colors hover:text-zinc-100'
+        onClick={handleCreatePlaylist}
+      >
+        <PiMusicNotesPlusFill className='flex-shrink-0 text-2xl' />
+        {sidebar_expanded && 'Create Playlist'}
+      </Button>
+      <Button
+        variant={'skeleton'}
+        size={'skeleton'}
+        className='gap-4 transition-colors hover:text-zinc-100'
+        onClick={handleUploadSong}
+      >
+        <PiUploadSimpleFill className='flex-shrink-0 text-2xl' />
+        {sidebar_expanded && 'Upload Song'}
+      </Button>
+
+      <CreatePlaylistModal
+        open={createPlaylistOpen}
+        setOpen={setCreatePlaylistOpen}
+      />
+      <UploadSongModal open={uploadSongOpen} setOpen={setUploadSongOpen} />
     </div>
   );
 };

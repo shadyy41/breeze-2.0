@@ -15,6 +15,7 @@ type State = {
   current_song: CurrentSong | null;
   playing: boolean;
   audio: HTMLAudioElement | null;
+  sidebar_expanded: boolean;
 };
 
 type Action = {
@@ -26,6 +27,8 @@ type Action = {
   setPlaying: (value: boolean) => void;
   setAudio: (a: HTMLAudioElement) => void;
   toggleRepeat: () => void;
+  toggle_sidebar: () => void;
+  cascade_song_remove: (song_id: string, playlist_id: string)=>void;
 };
 
 const usePlayerStore = create<State & Action>()((set) => ({
@@ -38,6 +41,7 @@ const usePlayerStore = create<State & Action>()((set) => ({
   playing: false,
   current_song: null,
   audio: null,
+  sidebar_expanded: true,
   play_song: (song) =>
     set((state) => ({
       current_song: song,
@@ -102,6 +106,15 @@ const usePlayerStore = create<State & Action>()((set) => ({
         },
       };
     }),
+  toggle_sidebar: () =>
+    set((state) => ({ sidebar_expanded: !state.sidebar_expanded })),
+  cascade_song_remove: (song_id, playlist_id) =>
+    set((state)=>{
+      if(playlist_id===state.queue.playlist?.id){
+        return { queue: {...state.queue, playlist: {...state.queue.playlist, songs: [...state.queue.playlist.songs.filter((song)=>song.id!==song_id)]}, songs: [...state.queue.songs.filter((song)=>song.id!==song_id)]} }
+      }
+      return { queue: {...state.queue, songs: [...state.queue.songs.filter((song)=>song.id!==song_id)] }}
+    })
 }));
 
 export default usePlayerStore;

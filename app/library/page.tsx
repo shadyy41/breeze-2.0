@@ -1,12 +1,27 @@
-import PlaylistCard from '@/components/playlist-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getUploadedSongs, getUserPlaylists } from '@/app/actions';
+import { getCachedUserUploads, getCachedUserPlaylists } from '@/app/actions';
 import { auth } from '@/lib/auth';
-import { Suspense } from 'react';
-import { PlaylistCardSkeleton } from '@/components/playlist-card';
+import ButtonsGrid from '@/components/library/buttons-grid';
+import { Providers } from '@/components/providers';
+import Link from 'next/link';
+import PlaylistIcon from '@/components/playlist-icon';
+import PlaylistTile from '@/components/playlist-tile';
 
 const Page = async () => {
-  const uploads = await getUploadedSongs();
+  const session = await auth();
+
+  if (!session) {
+    return (
+      <div className='h-full w-full p-7'>
+        <h2 className='text-xl font-medium'>
+          Sign in to create playlists and upload songs.
+        </h2>
+      </div>
+    );
+  }
+
+  const uploads = await getCachedUserUploads(session.user.id);
+  const playlists = await getCachedUserPlaylists(session.user.id);
 
   if (!uploads) {
     return (
@@ -17,16 +32,23 @@ const Page = async () => {
   }
 
   return (
-    <ScrollArea className='h-full w-full p-6'>
-      <h2 className='mb-4 text-2xl font-medium'>Your Library</h2>
-      <div className='flex w-full'>
-        {uploads && (
-          <Suspense fallback={<PlaylistCardSkeleton />}>
-            <PlaylistCard playlist={uploads} isUpload />
-          </Suspense>
-        )}
-      </div>
-    </ScrollArea>
+    <Providers session={session}>
+      <ScrollArea className='h-full w-full bg-zinc-950 bg-[radial-gradient(ellipse_80%_80%_at_70%_-20%,rgba(39,39,42,0.6),rgba(255,255,255,0))]'>
+        <div className='flex flex-col gap-3 p-4 sm:gap-4 sm:p-5 md:gap-6 md:p-7'>
+          <h2 className='text-xl font-medium'>Your Library</h2>
+          <ButtonsGrid uploads={uploads} />
+          <h3 className='text-xl font-medium'>Playlists</h3>
+          <div className='grid w-full grid-cols-1 gap-2 md:grid-cols-3'>
+            {playlists.map((p, idx) => {
+              return <PlaylistTile playlist={p} is_upload={false} key={p.id} />;
+            })}
+            {!playlists.length && (
+              <p className='text-sm'>Your playlists will be displayed here.</p>
+            )}
+          </div>
+        </div>
+      </ScrollArea>
+    </Providers>
   );
 };
 

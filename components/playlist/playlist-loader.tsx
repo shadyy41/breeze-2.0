@@ -11,10 +11,14 @@ const PlaylistLoader = () => {
             <Skeleton className='h-16 w-full' />
           </div>
         </header>
-        <Skeleton className='h-12 w-24' />
-        <Skeleton className='h-12 w-full' />
-        <Skeleton className='h-12 w-full' />
-        <Skeleton className='h-12 w-full' />
+        <div className='flex w-full items-center gap-4 px-2'>
+          <Skeleton className='h-12 w-24' />
+        </div>
+        <div className='flex flex-col gap-2 pb-10 text-sm md:gap-4'>
+          <Skeleton className='h-12 w-full' />
+          <Skeleton className='h-12 w-full' />
+          <Skeleton className='h-12 w-full' />
+        </div>
       </div>
     </div>
   );

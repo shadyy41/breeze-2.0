@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import TopMenu from './top-menu';
 import BottomMenu from './bottom-menu';
 import { ActionResponse, Playlist } from '@/types/types';
+import usePlayerStore from '@/lib/store';
 
 const Sidebar = ({
   playlists,
@@ -11,29 +12,17 @@ const Sidebar = ({
   playlists: Playlist[];
   uploads: Playlist | null;
 }) => {
-  const minWidth: number = 72,
-    maxWidth: number = 275;
-  const [expanded, setExpanded] = useState<boolean>(true);
-
-  const expand = () => {
-    setExpanded((e) => !e);
-  };
+  const sidebar_expanded = usePlayerStore((s) => s.sidebar_expanded);
 
   return (
     <aside
-      className='hidden flex-shrink-0 md:flex'
-      style={{
-        width: `${expanded ? `${maxWidth / 16}rem` : `${minWidth / 16}rem`}`,
-      }}
+      className={`hidden flex-shrink-0 md:flex ${
+        sidebar_expanded ? 'w-72' : 'w-[4.5rem]'
+      }`}
     >
       <div className='flex h-full w-full flex-col gap-2'>
-        <TopMenu expanded={expanded} expand={expand} />
-        <BottomMenu
-          expanded={expanded}
-          expand={expand}
-          playlists={playlists}
-          uploads={uploads}
-        />
+        <TopMenu />
+        <BottomMenu playlists={playlists} uploads={uploads} />
       </div>
     </aside>
   );

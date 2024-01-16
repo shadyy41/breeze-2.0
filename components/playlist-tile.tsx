@@ -24,9 +24,6 @@ const PlaylistTile = ({
   playlist: Playlist;
   is_upload: boolean;
 }) => {
-  const [isActive, setIsActive] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [isFocused, setIsFocused] = useState<boolean>(false);
   const play_playlist = usePlayerStore((s) => s.play_playlist);
   const queue = usePlayerStore((s) => s.queue);
   const playing = usePlayerStore((s) => s.playing);
@@ -41,7 +38,7 @@ const PlaylistTile = ({
     }
 
     return false;
-  }, [current_song, playing, queue.playlist]);
+  }, [current_song, playing, queue.playlist, playlist.id, playlist.songs]);
 
   const handlePlay = (e: MouseEvent) => {
     e.stopPropagation();
@@ -54,59 +51,23 @@ const PlaylistTile = ({
     }
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-  };
-
-  const handleMouseDown = () => {
-    setIsActive(true);
-  };
-
-  const handleMouseUp = () => {
-    setIsActive(false);
-  };
-
   return (
     <Link
       href={is_upload ? '/library/uploads' : `/playlist/${playlist.id}`}
-      className='flex h-14 w-full items-center justify-between gap-2 rounded rounded-l-md bg-zinc-900 pr-2 ring-offset-zinc-950 transition-colors hover:bg-zinc-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      className='group flex h-14 w-full items-center justify-between gap-2 rounded rounded-l-md bg-zinc-900 pr-2 ring-offset-zinc-950 transition-colors hover:bg-zinc-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
     >
-      <div
-        className={`flex h-full w-full items-center justify-start gap-2 ${
-          isHovered || isFocused || isActive ? 'max-w-[calc(100%-44px)]' : ''
-        }`}
-      >
+      <div className='flex h-full w-full items-center justify-start gap-2 hover:max-w-[calc(100%-44px)]'>
         <div className='aspect-square h-full flex-shrink-0 overflow-hidden rounded-l shadow-sm'>
           <PlaylistIcon songs={playlist.songs} />
         </div>
         <p className='truncate text-sm font-medium'>{playlist.name}</p>
       </div>
-      {(isHovered || isFocused || isActive) && (
-        <button
-          onClick={handlePlay}
-          className='flex flex-shrink-0 transform items-center justify-center rounded-full bg-zinc-200 p-2 text-lg text-black  ring-offset-zinc-950 transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:scale-95'
-        >
-          {isCurrentPlaying ? <PiPauseFill /> : <PiPlayFill />}
-        </button>
-      )}
+      <button
+        onClick={handlePlay}
+        className='hidden flex-shrink-0 transform items-center justify-center rounded-full bg-zinc-200 p-2 text-lg text-black ring-offset-zinc-950 transition-all  duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 active:flex active:scale-95 group-hover:flex'
+      >
+        {isCurrentPlaying ? <PiPauseFill /> : <PiPlayFill />}
+      </button>
     </Link>
   );
 };

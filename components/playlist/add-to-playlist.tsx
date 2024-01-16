@@ -1,18 +1,23 @@
-import { addToPlaylist, getUserPlaylists } from '@/app/actions';
+import { addToPlaylist, getCachedUserPlaylists } from '@/app/actions';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Playlist } from '@/types/types';
 import { useEffect, useState } from 'react';
 import { SetStateAction, Dispatch } from 'react';
-import { useToast } from '../ui/use-toast';
+import toast from 'react-hot-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
+import { useSession } from 'next-auth/react';
+
+type ActionType = {
+  playlist_id: string;
+  song_id: string;
+}
 
 const AddToPlaylist = ({
   dialogOpen,
@@ -27,13 +32,13 @@ const AddToPlaylist = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [adding, setAdding] = useState<boolean>(false);
 
-  const { toast } = useToast();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let data = await getUserPlaylists();
+        let data = await getCachedUserPlaylists(session!.user.id);
         data = data.filter((playlist) => {
           let hasSong = false;
           playlist.songs.map((song) => {
@@ -45,38 +50,30 @@ const AddToPlaylist = ({
         });
         setPlaylists(data);
       } catch (error) {
-        toast({
-          description: 'An error occured.',
-          variant: 'destructive',
-        });
+        toast.error('An error occured.');
       } finally {
         setLoading(false);
       }
     };
 
-    if (dialogOpen) fetchData();
-  }, [dialogOpen]);
+    if (dialogOpen && session) fetchData();
+  }, [dialogOpen, session, songId]);
 
   const handleAdd = async (playlist_id: string, playlist_name: string) => {
+    const toast_id = toast.loading(`Adding song to ${playlist_name}`);
     setAdding(true);
     try {
-      const res = await addToPlaylist(playlist_id, songId);
+      const res = await addToPlaylist(playlist_id, songId)
       if (!res) {
-        toast({
-          description: 'An error occured.',
-          variant: 'destructive',
-        });
+        toast.error('An error occured.');
       } else {
         setPlaylists((playlists) =>
           playlists.filter((p) => p.id !== playlist_id)
         );
-        toast({ description: `Song added to ${playlist_name}` });
+        toast.success(`Song added to ${playlist_name}`, { id: toast_id });
       }
     } catch (error) {
-      toast({
-        description: 'An error occured.',
-        variant: 'destructive',
-      });
+      toast.error('An error occured.', { id: toast_id });
     } finally {
       setAdding(false);
       setDialogOpen(false);
@@ -85,7 +82,6 @@ const AddToPlaylist = ({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add To Playlist</DialogTitle>
@@ -111,7 +107,7 @@ const AddToPlaylist = ({
                 onClick={(x) => handleAdd(e.id, e.name)}
                 disabled={adding}
               >
-                Add
+                { adding ? 'Adding' : 'Add' }
               </Button>
             </div>
           );

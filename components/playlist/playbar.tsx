@@ -22,15 +22,21 @@ import {
 import { Button } from '../ui/button';
 import { deletePlaylist } from '@/app/actions';
 import { useState, useMemo } from 'react';
-import { useToast } from '../ui/use-toast';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import usePlayerStore from '@/lib/store';
 import { Playlist, Song } from '@/types/types';
 
-const Playbar = ({ playlist }: { playlist: Playlist }) => {
+const Playbar = ({
+  playlist,
+  is_upload,
+}: {
+  playlist: Playlist;
+  is_upload: boolean;
+}) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
-  const { toast } = useToast();
+
   const router = useRouter();
   const play_playlist = usePlayerStore((s) => s.play_playlist);
   const queue = usePlayerStore((s) => s.queue);
@@ -47,9 +53,11 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
     }
 
     return false;
-  }, [current_song, playing, queue.playlist]);
+  }, [current_song, playing, queue.playlist, playlist.id, playlist.songs]);
 
   const handlePlay = () => {
+    if (playlist.songs.length === 0) return;
+
     if (isCurrentPlaying) audio?.pause();
     else {
       if (queue.playlist?.id === playlist.id) audio?.play();
@@ -58,23 +66,18 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
   };
 
   const handleDelete = async () => {
+    const toast_id = toast.loading('Deleting playlist');
     setDeleting(true);
     try {
       const res = await deletePlaylist(playlist.id);
       if (!res) {
-        toast({
-          description: 'An error occured.',
-          variant: 'destructive',
-        });
+        toast.error('An error occured.', { id: toast_id });
       } else {
         router.replace('/');
-        toast({ description: `Playlist deleted.` });
+        toast.success('Playlist deleted.', { id: toast_id });
       }
     } catch (error) {
-      toast({
-        description: 'An error occured.',
-        variant: 'destructive',
-      });
+      toast.error('An error occured.', { id: toast_id });
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
@@ -82,10 +85,11 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
   };
 
   const addToQueue = () => {
+    if (playlist.songs.length === 0) return;
     for (const song of playlist.songs) {
       push_song({ ...song, playlist_id: playlist.id });
     }
-    toast({ description: 'Added playlist to the queue.' });
+    toast.success('Added playlist to the queue.');
   };
 
   return (
@@ -105,19 +109,21 @@ const Playbar = ({ playlist }: { playlist: Playlist }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem
-            onSelect={() =>
-              toast({ description: 'Feature not implemented yet :)' })
-            }
+            onSelect={() => toast.error('Feature not implemented yet.')}
           >
             Edit Details
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={addToQueue}>
             Add To Queue
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setDeleteDialogOpen(true)}>
-            Delete Playlist
-          </DropdownMenuItem>
+          {!is_upload && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+                Delete Playlist
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
