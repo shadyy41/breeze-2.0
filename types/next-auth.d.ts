@@ -8,12 +8,10 @@ declare module 'next-auth' {
       image: string;
       id: string;
       admin: boolean;
-      upload_count: number;
     } & DefaultSession['user'];
   }
 
   interface User {
     admin?: boolean;
-    upload_count?: number;
   }
 }

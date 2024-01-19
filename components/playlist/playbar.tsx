@@ -44,6 +44,9 @@ const Playbar = ({
   const playing = usePlayerStore((s) => s.playing);
   const current_song = usePlayerStore((s) => s.current_song);
   const audio = usePlayerStore((s) => s.audio);
+  const cascade_playlist_delete = usePlayerStore(
+    (s) => s.cascade_playlist_delete
+  );
 
   const isCurrentPlaying = useMemo(() => {
     if (!playing || !(queue.playlist?.id === playlist.id)) return false;
@@ -69,10 +72,12 @@ const Playbar = ({
     const toast_id = toast.loading('Deleting playlist');
     setDeleting(true);
     try {
-      const res = await deletePlaylist(playlist.id);
+      const { id } = playlist;
+      const res = await deletePlaylist(id);
       if (!res) {
         toast.error('An error occured.', { id: toast_id });
       } else {
+        cascade_playlist_delete(id);
         router.replace('/');
         toast.success('Playlist deleted.', { id: toast_id });
       }

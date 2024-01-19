@@ -13,6 +13,7 @@ import {
   PiQueue,
   PiQueueFill,
   PiArrowDownBold,
+  PiShuffleAngularBold,
 } from 'react-icons/pi';
 import CustomProgress from './custom-progress';
 import Image from 'next/image';
@@ -35,9 +36,12 @@ const Player = () => {
   const playing = usePlayerStore((s) => s.playing);
   const audio = usePlayerStore((s) => s.audio);
   const next = usePlayerStore((s) => s.next);
+  const prev = usePlayerStore((s) => s.prev);
   const setPlaying = usePlayerStore((s) => s.setPlaying);
   const setAudio = usePlayerStore((s) => s.setAudio);
   const toggleRepeat = usePlayerStore((s) => s.toggleRepeat);
+  const toggleShuffle = usePlayerStore((s) => s.toggleShuffle);
+
   const [expanded, setExpanded] = useState<boolean>(false);
 
   const formatTime = (time: number): string => {
@@ -51,7 +55,7 @@ const Player = () => {
 
   useEffect(() => {
     setAudio(new Audio());
-  }, []);
+  }, [setAudio]);
 
   useEffect(() => {
     if (!audio || !current_song) return;
@@ -97,7 +101,7 @@ const Player = () => {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('pause', handlePause);
     };
-  }, [audio, queue.repeat]);
+  }, [audio, queue.repeat, next, setPlaying, volume]);
 
   const togglePlay = (e: MouseEvent) => {
     e.stopPropagation();
@@ -147,9 +151,20 @@ const Player = () => {
 
   const handleNext = (e: MouseEvent) => {
     e.stopPropagation();
-    if (!audio || audio.src == '') return;
+    if (!audio || audio.src === '') return;
 
     audio.currentTime = audio.duration;
+  };
+
+  const handlePrev = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (!audio || audio.src === '') return;
+
+    if (audio.currentTime <= 5) {
+      prev();
+    } else {
+      audio.currentTime = 0;
+    }
   };
 
   const openQueue = () => {
@@ -180,13 +195,13 @@ const Player = () => {
         <div className='min-w-sm flex h-full max-w-md flex-1 flex-col items-center justify-center gap-2'>
           <div className='flex items-center justify-center gap-4 text-2xl'>
             <button
-              onClick={toggleMute}
+              onClick={toggleShuffle}
               className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
             >
-              <PiShuffleAngular />
+              {queue.shuffle ? <PiShuffleAngularBold /> : <PiShuffleAngular />}
             </button>
             <button
-              onClick={toggleMute}
+              onClick={handlePrev}
               className='flex flex-shrink-0 rotate-180 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
             >
               <PiFastForwardFill />
@@ -289,13 +304,17 @@ const Player = () => {
               </div>
               <div className='flex h-fit items-center justify-between gap-4 text-3xl'>
                 <button
-                  onClick={toggleMute}
+                  onClick={toggleShuffle}
                   className='flex flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
                 >
-                  <PiShuffleAngular />
+                  {queue.shuffle ? (
+                    <PiShuffleAngularBold />
+                  ) : (
+                    <PiShuffleAngular />
+                  )}
                 </button>
                 <button
-                  onClick={toggleMute}
+                  onClick={handlePrev}
                   className='flex flex-shrink-0 rotate-180 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
                 >
                   <PiFastForwardFill />

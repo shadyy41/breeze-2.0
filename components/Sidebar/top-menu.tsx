@@ -16,17 +16,28 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import usePlayerStore from '@/lib/store';
+import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const TopMenu = () => {
+const TopMenu = ({
+  upload_count,
+  playlist_count,
+}: {
+  playlist_count: number;
+  upload_count: number;
+}) => {
   const path = usePathname();
   const { data: session } = useSession();
   const [createPlaylistOpen, setCreatePlaylistOpen] = useState<boolean>(false);
   const [uploadSongOpen, setUploadSongOpen] = useState<boolean>(false);
   const sidebar_expanded = usePlayerStore((s) => s.sidebar_expanded);
 
-  const handleCreatePlaylist = () => {
+  const handleCreatePlaylist = async () => {
     if (!session) {
       toast.error('You must be signed in to create playlists.');
+    } else if (playlist_count >= PLAYLIST_COUNT_LIMIT) {
+      toast.error(
+        `You can only create upto ${PLAYLIST_COUNT_LIMIT} playlists.`
+      );
     } else {
       setCreatePlaylistOpen(true);
     }
@@ -35,8 +46,8 @@ const TopMenu = () => {
   const handleUploadSong = () => {
     if (!session) {
       toast.error('You must be signed in to upload songs.');
-    } else if (!session.user.admin && session.user.upload_count >= 4) {
-      toast.error('You can only upload upto 4 songs.');
+    } else if (!session.user.admin && upload_count >= UPLOAD_COUNT_LIMIT) {
+      toast.error(`You can only upload upto ${UPLOAD_COUNT_LIMIT} songs.`);
     } else {
       setUploadSongOpen(true);
     }

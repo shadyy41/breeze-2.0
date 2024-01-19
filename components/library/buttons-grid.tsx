@@ -10,18 +10,30 @@ import CreatePlaylistModal from '../sidebar/create-playlist-modal';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import UploadSongModal from '../sidebar/upload-song-modal';
-import PlaylistIcon from '../playlist-icon';
 import { Playlist } from '@/types/types';
 import PlaylistTile from '../playlist-tile';
+import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const ButtonsGrid = ({ uploads }: { uploads: Playlist }) => {
+const ButtonsGrid = ({
+  uploads,
+  upload_count,
+  playlist_count,
+}: {
+  uploads: Playlist;
+  playlist_count: number;
+  upload_count: number;
+}) => {
   const { data: session } = useSession();
   const [createPlaylistOpen, setCreatePlaylistOpen] = useState<boolean>(false);
   const [uploadSongOpen, setUploadSongOpen] = useState<boolean>(false);
 
   const handleCreatePlaylist = () => {
     if (!session) {
-      toast.error('You need to be signed in.');
+      toast.error('You must be signed in to create playlists.');
+    } else if (playlist_count >= PLAYLIST_COUNT_LIMIT) {
+      toast.error(
+        `You can only create upto ${PLAYLIST_COUNT_LIMIT} playlists.`
+      );
     } else {
       setCreatePlaylistOpen(true);
     }
@@ -30,8 +42,8 @@ const ButtonsGrid = ({ uploads }: { uploads: Playlist }) => {
   const handleUploadSong = () => {
     if (!session) {
       toast.error('You must be signed in to upload songs.');
-    } else if (!session.user.admin && session.user.upload_count >= 4) {
-      toast.error('You can only upload upto 4 songs.');
+    } else if (!session.user.admin && upload_count >= UPLOAD_COUNT_LIMIT) {
+      toast.error(`You can only upload upto ${UPLOAD_COUNT_LIMIT} songs.`);
     } else {
       setUploadSongOpen(true);
     }

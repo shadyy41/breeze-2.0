@@ -84,7 +84,7 @@ const BottomMenu = ({
       >
         <div
           className={`grid h-full w-full grid-cols-1 ${
-            sidebar_expanded ? 'gap-3 px-1 pt-2' : 'gap-2 px-1 pt-1'
+            sidebar_expanded ? 'gap-3 px-1' : 'gap-2 px-1'
           } pb-5`}
         >
           {all_playlists.map((p, idx) => {

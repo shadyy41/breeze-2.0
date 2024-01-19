@@ -8,9 +8,13 @@ import usePlayerStore from '@/lib/store';
 const Sidebar = ({
   playlists,
   uploads,
+  upload_count,
+  playlist_count,
 }: {
   playlists: Playlist[];
   uploads: Playlist | null;
+  playlist_count: number;
+  upload_count: number;
 }) => {
   const sidebar_expanded = usePlayerStore((s) => s.sidebar_expanded);
 
@@ -21,7 +25,7 @@ const Sidebar = ({
       }`}
     >
       <div className='flex h-full w-full flex-col gap-2'>
-        <TopMenu />
+        <TopMenu playlist_count={playlist_count} upload_count={upload_count} />
         <BottomMenu playlists={playlists} uploads={uploads} />
       </div>
     </aside>

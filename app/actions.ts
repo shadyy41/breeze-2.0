@@ -4,6 +4,9 @@ import sql from '@/lib/db';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
+import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
+
+const revalidateTime = 1800; //in seconds
 
 export async function createSong(song: {
   name: string;
@@ -13,8 +16,11 @@ export async function createSong(song: {
 }): Promise<boolean> {
   try {
     const session = await auth();
-    if (!session || (!session.user.admin && session.user.upload_count >= 4))
-      return false;
+    if (!session) return false;
+
+    const upload_count = await getCachedUploadCount(session.user.id);
+    if (!session.user.admin && upload_count >= UPLOAD_COUNT_LIMIT) return false;
+
     await sql.begin(async (sql) => {
       await sql`
       insert into next_auth.songs (song_path, thumb_path, name, private, user_id) values (${song.song_path}, ${song.thumb_path}, ${song.name}, ${song.private}, ${session.user.id})
@@ -23,7 +29,11 @@ export async function createSong(song: {
       update next_auth.users set upload_count = upload_count + 1 where id = ${session.user.id}
       `;
     });
-    revalidateTag('user_uploads')
+
+    revalidateTag('user_uploads');
+    revalidateTag('upload_count');
+    if (!song.private) revalidateTag('public_songs');
+
     return true;
   } catch (error) {
     console.error('Transaction failed:', error);
@@ -35,14 +45,55 @@ export async function createSong(song: {
 export async function createPlaylist(playlistName: string): Promise<boolean> {
   try {
     const session = await auth();
+
     if (!session) return false;
-    await sql`
-    insert into next_auth.playlists (user_id, name) values (${session.user.id}, ${playlistName})
-    `;
-    revalidateTag('user_playlists')
+
+    const playlist_count = await getCachedPlaylistCount(session.user.id);
+    if (playlist_count >= PLAYLIST_COUNT_LIMIT) return false;
+
+    await sql.begin(async (sql) => {
+      await sql`
+      insert into next_auth.playlists (user_id, name) values (${session.user.id}, ${playlistName})
+      `;
+      await sql`
+      update next_auth.users set playlist_count = playlist_count + 1 where id = ${session.user.id}
+      `;
+    });
+    revalidateTag('user_playlists');
+    revalidateTag('playlist_count');
     return true;
   } catch (e) {
     console.log(e, 'ERROR WHILE CREATING PLAYLIST IN PSQL.');
+    sql`ROLLBACK`;
+    return false;
+  }
+}
+
+export async function deletePlaylist(id: string) {
+  try {
+    const session = await auth();
+
+    if (!session) return false;
+
+    await sql.begin(async (sql) => {
+      await sql`
+      DELETE FROM next_auth.playlists
+      WHERE id = ${id};
+      `;
+      await sql`
+      update next_auth.users set playlist_count = playlist_count - 1 where id = ${session.user.id}
+      `;
+    });
+
+    revalidateTag('user_playlists');
+    revalidateTag('playlist');
+    revalidateTag('playlist_count');
+
+    return true;
+  } catch (error) {
+    console.log(error, 'ERROR DELETING SONG');
+    sql`ROLLBACK`;
+
     return false;
   }
 }
@@ -58,8 +109,8 @@ export async function addToPlaylist(
       (${playlist_id}, ${song_id});
     `;
 
-    revalidateTag('user_playlists')
-    revalidateTag('playlist')
+    revalidateTag('user_playlists');
+    revalidateTag('playlist');
     return true;
   } catch (error) {
     console.log(error, 'ERROR ADDING SONG TO PLAYLIST');
@@ -106,8 +157,9 @@ export async function deleteSong(songId: string): Promise<boolean> {
     });
 
     revalidateTag('user_uploads');
-    revalidateTag('user_playlists')
-    revalidateTag('playlist')
+    revalidateTag('user_playlists');
+    revalidateTag('playlist');
+    revalidateTag('upload_count');
 
     return true;
   } catch (error) {
@@ -128,8 +180,8 @@ export async function removeSong(playlist_id: string, song_id: string) {
       WHERE playlist_id = ${playlist_id} and song_id=${song_id};
       `;
 
-    revalidateTag('user_playlists')
-    revalidateTag('playlist')
+    revalidateTag('user_playlists');
+    revalidateTag('playlist');
 
     return true;
   } catch (error) {
@@ -138,29 +190,48 @@ export async function removeSong(playlist_id: string, song_id: string) {
   }
 }
 
-export async function deletePlaylist(id: string) {
+export const getCachedPlaylistCount = unstable_cache(
+  async (id: string) => getPlaylistCount(),
+  ['playlist_count'],
+  { revalidate: revalidateTime, tags: ['playlist_count'] }
+);
+
+async function getPlaylistCount(): Promise<number> {
   try {
     const session = await auth();
+    if (!session) return PLAYLIST_COUNT_LIMIT;
 
-    if (!session) return false;
-
-    await sql`
-      DELETE FROM next_auth.playlists
-      WHERE id = ${id};
-      `;
-
-    revalidateTag('user_playlists')
-    revalidateTag('playlist')
-    return true;
+    const data =
+      await sql`select playlist_count from next_auth.users where id=${session.user.id}`;
+    return parseInt(data[0].playlist_count);
   } catch (error) {
-    console.log(error, 'ERROR DELETING SONG');
-    return false;
+    return PLAYLIST_COUNT_LIMIT;
   }
 }
+
+export const getCachedUploadCount = unstable_cache(
+  async (id: string) => getUploadCount(),
+  ['upload_count'],
+  { revalidate: revalidateTime, tags: ['upload_count'] }
+);
+
+async function getUploadCount(): Promise<number> {
+  try {
+    const session = await auth();
+    if (!session) return PLAYLIST_COUNT_LIMIT;
+
+    const data =
+      await sql`select upload_count from next_auth.users where id=${session.user.id}`;
+    return parseInt(data[0].playlist_count);
+  } catch (error) {
+    return PLAYLIST_COUNT_LIMIT;
+  }
+}
+
 export const getCachedUserPlaylists = unstable_cache(
   async (id: string) => getUserPlaylists(),
   ['user_playlists'],
-  { revalidate: 1800, tags: ['user_playlists'] }
+  { revalidate: revalidateTime, tags: ['user_playlists'] }
 );
 
 export async function getUserPlaylists(): Promise<Playlist[]> {
@@ -249,7 +320,7 @@ export async function getUserPlaylists(): Promise<Playlist[]> {
 export const getCachedUserUploads = unstable_cache(
   async (id: string) => getUploadedSongs(),
   ['user_uploads'],
-  { revalidate: 1800, tags: ['user_uploads'] }
+  { revalidate: revalidateTime, tags: ['user_uploads'] }
 );
 
 async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
@@ -309,10 +380,58 @@ async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
   }
 }
 
+export const getCachedPublicSongs = unstable_cache(
+  async () => getPublicSongs(),
+  ['public_songs'],
+  { revalidate: revalidateTime, tags: ['public_songs'] }
+);
+
+async function getPublicSongs(): Promise<ActionResponse<Playlist>> {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
+      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? ''
+    );
+
+    const data = await sql`
+      SELECT id, name, song_path, thumb_path, created_at
+      FROM next_auth.songs
+      WHERE private = false
+    `;
+
+    const songs: Song[] = [];
+
+    for (const s of data) {
+      const { data: thumb_data } = supabase.storage
+        .from('public_songs')
+        .getPublicUrl(s.thumb_path);
+      const { data: song_data } = supabase.storage
+        .from('public_songs')
+        .getPublicUrl(s.song_path);
+
+      if (thumb_data && song_data) {
+        songs.push({
+          id: s.id,
+          created_at: formatDate(s.created_at),
+          name: s.name,
+          song_path: song_data.publicUrl,
+          thumb_path: thumb_data.publicUrl,
+          private: true,
+        });
+      }
+    }
+
+    return { songs: songs, id: 'public_songs', name: 'Explore NCS' };
+  } catch (error) {
+    console.error('Error fetching songs:', error);
+    return null;
+  }
+}
+
 export const getCachedPlaylist = unstable_cache(
   async (id: string, user_id) => getPlaylist(id),
   ['playlist'],
-  { revalidate: 1800, tags: ['playlist'] }
+  { revalidate: revalidateTime, tags: ['playlist'] }
 );
 
 async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {

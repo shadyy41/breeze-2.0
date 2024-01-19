@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Playlist } from '@/types/types';
+import { Playlist, Song } from '@/types/types';
 import { useEffect, useState } from 'react';
 import { SetStateAction, Dispatch } from 'react';
 import toast from 'react-hot-toast';
@@ -13,25 +13,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { useSession } from 'next-auth/react';
-
-type ActionType = {
-  playlist_id: string;
-  song_id: string;
-}
+import usePlayerStore from '@/lib/store';
 
 const AddToPlaylist = ({
   dialogOpen,
   setDialogOpen,
-  songId,
+  song,
 }: {
   dialogOpen: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
-  songId: string;
+  song: Song;
 }) => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [adding, setAdding] = useState<boolean>(false);
-
+  const cascade_song_add = usePlayerStore((s) => s.cascade_song_add);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -41,8 +37,8 @@ const AddToPlaylist = ({
         let data = await getCachedUserPlaylists(session!.user.id);
         data = data.filter((playlist) => {
           let hasSong = false;
-          playlist.songs.map((song) => {
-            if (song.id === songId) {
+          playlist.songs.map((s) => {
+            if (s.id === song.id) {
               hasSong = true;
             }
           });
@@ -57,19 +53,20 @@ const AddToPlaylist = ({
     };
 
     if (dialogOpen && session) fetchData();
-  }, [dialogOpen, session, songId]);
+  }, [dialogOpen, session, song.id]);
 
   const handleAdd = async (playlist_id: string, playlist_name: string) => {
     const toast_id = toast.loading(`Adding song to ${playlist_name}`);
     setAdding(true);
     try {
-      const res = await addToPlaylist(playlist_id, songId)
+      const res = await addToPlaylist(playlist_id, song.id);
       if (!res) {
         toast.error('An error occured.');
       } else {
         setPlaylists((playlists) =>
           playlists.filter((p) => p.id !== playlist_id)
         );
+        cascade_song_add(song, playlist_id);
         toast.success(`Song added to ${playlist_name}`, { id: toast_id });
       }
     } catch (error) {
@@ -107,7 +104,7 @@ const AddToPlaylist = ({
                 onClick={(x) => handleAdd(e.id, e.name)}
                 disabled={adding}
               >
-                { adding ? 'Adding' : 'Add' }
+                {adding ? 'Adding' : 'Add'}
               </Button>
             </div>
           );

@@ -102,7 +102,8 @@ const MyTableRow = ({
   const audio = usePlayerStore((s) => s.audio);
   const playing = usePlayerStore((s) => s.playing);
 
-  const current_playing = current_song?.playlist_id === playlist.id && current_song?.id === song.id;
+  const current_playing =
+    current_song?.playlist_id === playlist.id && current_song?.id === song.id;
 
   const play = () => {
     if (current_song?.id === song.id) audio?.play();
@@ -136,12 +137,20 @@ const MyTableRow = ({
       <div className='flex w-6 flex-shrink-0 items-center justify-center truncate'>
         <button
           onClick={handleClick}
-          className={`flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 ${ current_playing ? 'flex' : 'hidden group-hover:flex' }`}
+          className={`flex-shrink-0 items-center justify-center rounded-full text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 ${
+            current_playing ? 'flex' : 'hidden group-hover:flex'
+          }`}
         >
-          <PiPauseFill className={`${ (playing && current_playing) ? 'flex' : 'hidden' }`}/>
-          <PiPlayFill className={`${ !(playing && current_playing) ? 'flex' : 'hidden' }`}/>
+          <PiPauseFill
+            className={`${playing && current_playing ? 'flex' : 'hidden'}`}
+          />
+          <PiPlayFill
+            className={`${!(playing && current_playing) ? 'flex' : 'hidden'}`}
+          />
         </button>
-        { !current_playing && <p className='truncate group-hover:invisible'>{idx + 1}</p>}
+        {!current_playing && (
+          <p className='truncate group-hover:invisible'>{idx + 1}</p>
+        )}
       </div>
       <div className='flex h-full w-full items-center gap-2 md:w-2/5'>
         <div className='relative aspect-square h-full flex-shrink-0 overflow-hidden rounded'>
@@ -179,6 +188,8 @@ const TableDropdown = ({
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
   const cascade_song_remove = usePlayerStore((s) => s.cascade_song_remove);
+  const cascade_song_delete = usePlayerStore((s) => s.cascade_song_delete);
+  const current_song = usePlayerStore((s) => s.current_song);
 
   const push = usePlayerStore((s) => s.push_song);
 
@@ -192,10 +203,16 @@ const TableDropdown = ({
     const toast_id = toast.loading('Deleting song');
     setDeleting(true);
     try {
-      const res = await deleteSong(song.id);
+      const { id } = song;
+      if (id === current_song?.id) {
+        toast.error('This song is currently being played.', { id: toast_id });
+        return;
+      }
+      const res = await deleteSong(id);
       if (!res) {
         toast.error('An error occured.', { id: toast_id });
       } else {
+        cascade_song_delete(id);
         toast.success('Song deleted.', { id: toast_id });
       }
     } catch (error) {
@@ -215,7 +232,7 @@ const TableDropdown = ({
       if (!res) {
         toast.error('An error occured.', { id: toast_id });
       } else {
-        cascade_song_remove(song_id, playlist_id)
+        cascade_song_remove(song_id, playlist_id);
         toast.success('Song removed from playlist.', { id: toast_id });
       }
     } catch (error) {
@@ -278,7 +295,7 @@ const TableDropdown = ({
       <AddToPlaylist
         dialogOpen={playlistDialogOpen}
         setDialogOpen={setPlaylistDialogOpen}
-        songId={song.id}
+        song={song}
       />
     </div>
   );

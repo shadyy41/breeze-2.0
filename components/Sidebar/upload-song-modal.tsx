@@ -63,10 +63,12 @@ const UploadSongModal = ({
         }
       );
 
+      const bucket_name = isPrivate ? 'songs' : 'public_songs';
+
       const uniqueSongName = songName + uuidv4().toString();
 
       const { data: songData, error: songError } = await supabase.storage
-        .from('songs')
+        .from(bucket_name)
         .upload(`${session.user.id}/songs/${uniqueSongName}`, selectedSongFile);
 
       if (songError) {
@@ -76,7 +78,7 @@ const UploadSongModal = ({
 
       // Upload Image
       const { data: imageData, error: imageError } = await supabase.storage
-        .from('songs')
+        .from(bucket_name)
         .upload(
           `${session.user.id}/thumbs/${uniqueSongName}`,
           selectedImageFile
@@ -85,7 +87,7 @@ const UploadSongModal = ({
       if (imageError) {
         handleError(imageError, 'Image');
         // Rollback song upload on image upload failure
-        await supabase.storage.from('songs').remove([songData.path]);
+        await supabase.storage.from(bucket_name).remove([songData.path]);
         return;
       }
 
@@ -103,8 +105,8 @@ const UploadSongModal = ({
         setOpen(false);
       } else {
         // Rollback on song creation failure
-        await supabase.storage.from('songs').remove([songData.path]);
-        await supabase.storage.from('songs').remove([imageData.path]);
+        await supabase.storage.from(bucket_name).remove([songData.path]);
+        await supabase.storage.from(bucket_name).remove([imageData.path]);
         toast.error('Upload failed.', { id: toast_id });
       }
     } catch (uploadError) {
