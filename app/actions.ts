@@ -6,7 +6,7 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
 import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const revalidateTime = 1800; //in seconds
+const revalidateTime = 1; //in seconds
 
 export async function createSong(song: {
   name: string;
@@ -43,6 +43,7 @@ export async function createSong(song: {
 }
 
 export async function createPlaylist(playlistName: string): Promise<boolean> {
+  await wait(10000)
   try {
     const session = await auth();
 
