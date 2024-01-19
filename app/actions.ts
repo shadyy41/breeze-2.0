@@ -43,7 +43,6 @@ export async function createSong(song: {
 }
 
 export async function createPlaylist(playlistName: string): Promise<boolean> {
-  await wait(10000)
   try {
     const session = await auth();
 
