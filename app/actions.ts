@@ -6,7 +6,7 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
 import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const revalidateTime = (process.env.NODE_ENV==='production') ?  500 : 1; //in seconds
+const revalidateTime = process.env.NODE_ENV === 'production' ? 500 : 1; //in seconds
 
 export async function createSong(song: {
   name: string;
@@ -372,7 +372,7 @@ async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
     const songs: Song[] = [];
 
     for (const s of data) {
-      if(!s.private) continue;
+      if (!s.private) continue;
 
       const { signedSongUrl, signedThumbUrl } = await generateSignedUrls(
         s.song_path,
@@ -555,6 +555,48 @@ async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
   } catch (error) {
     console.error('Error fetching playlist:', error);
     return null;
+  }
+}
+
+export async function search(search_term: string) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
+      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? ''
+    );
+
+    const data = await sql`
+      SELECT *
+      FROM next_auth.songs
+      WHERE name ILIKE '%' || ${search_term} || '%' AND private=false;
+    `;
+
+    const songs: Song[] = [];
+
+    for (const s of data) {
+      const { data: thumb_data } = supabase.storage
+        .from('public_songs')
+        .getPublicUrl(s.thumb_path);
+      const { data: song_data } = supabase.storage
+        .from('public_songs')
+        .getPublicUrl(s.song_path);
+
+      if (thumb_data && song_data) {
+        songs.push({
+          id: s.id,
+          created_at: formatDate(s.created_at),
+          name: s.name,
+          song_path: song_data.publicUrl,
+          thumb_path: thumb_data.publicUrl,
+          private: true,
+        });
+      }
+    }
+
+    return songs;
+  } catch (error) {
+    console.log(error);
+    return [];
   }
 }
 

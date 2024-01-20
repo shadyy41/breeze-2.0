@@ -274,9 +274,11 @@ const TableDropdown = ({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          {session && <DropdownMenuItem onSelect={() => setPlaylistDialogOpen(true)}>
-            Add To Playlist
-          </DropdownMenuItem>}
+          {session && (
+            <DropdownMenuItem onSelect={() => setPlaylistDialogOpen(true)}>
+              Add To Playlist
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={handlePush}>
             Add To Queue
           </DropdownMenuItem>

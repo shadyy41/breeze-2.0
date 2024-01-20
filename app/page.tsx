@@ -17,13 +17,13 @@ const Home = async () => {
   if (!session) {
     return (
       <ScrollArea className='h-full w-full bg-zinc-950 bg-[radial-gradient(ellipse_80%_80%_at_70%_-20%,rgba(39,39,42,0.6),rgba(255,255,255,0))]'>
-        <div className='flex flex-col gap-3 p-4 sm:gap-4 sm:p-5 pb-32 md:gap-4 md:p-5 md:pb-5'>
+        <div className='flex flex-col gap-3 p-4 pb-32 sm:gap-4 sm:p-5 md:gap-4 md:p-5 md:pb-5'>
           <Greeting />
           <h2 className='text-xl font-medium text-zinc-400'>
             Sign in to create playlists and upload songs.
           </h2>
           <h3 className='text-xl font-medium'>Explore NCS</h3>
-          <div className='grid w-full grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
+          <div className='grid w-full grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5'>
             {public_songs?.songs.map((song, idx) => (
               <SongCard song={song} key={song.id} />
             ))}
@@ -38,7 +38,7 @@ const Home = async () => {
 
   return (
     <ScrollArea className='h-full w-full bg-zinc-950 bg-[radial-gradient(ellipse_80%_80%_at_70%_-20%,rgba(39,39,42,0.6),rgba(255,255,255,0))]'>
-      <div className='flex flex-col gap-3 p-4 sm:gap-4 sm:p-5 pb-32 md:gap-4 md:p-5 md:pb-5'>
+      <div className='flex flex-col gap-3 p-4 pb-32 sm:gap-4 sm:p-5 md:gap-4 md:p-5 md:pb-5'>
         <Greeting />
         <div className='grid w-full grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4'>
           {uploads && <PlaylistTile playlist={uploads} is_upload={true} />}
@@ -49,7 +49,7 @@ const Home = async () => {
             })}
         </div>
         <h3 className='text-xl font-medium'>Explore NCS</h3>
-        <div className='grid w-full grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
+        <div className='grid w-full grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5'>
           {public_songs?.songs.map((song, idx) => (
             <SongCard song={song} key={song.id} />
           ))}
