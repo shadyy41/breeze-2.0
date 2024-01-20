@@ -18,6 +18,7 @@ import {
 import CustomProgress from './custom-progress';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { Song } from '@/types/types';
 
 const Player = () => {
   const [currentTime, setCurrentTime] = useState(0);
@@ -61,6 +62,21 @@ const Player = () => {
     if (!audio || !current_song) return;
     audio.src = current_song?.song_path;
     audio.play();
+
+    if('mediaSession' in window.navigator){
+      window.navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: current_song.name,
+        artist: current_song.private ? '' : 'NCS',
+        artwork: [
+          { src: current_song.thumb_path,   sizes: '96x96',   type: 'image/jpeg' },
+          { src: current_song.thumb_path, sizes: '128x128', type: 'image/jpeg' },
+          { src: current_song.thumb_path, sizes: '192x192', type: 'image/jpeg' },
+          { src: current_song.thumb_path, sizes: '256x256', type: 'image/jpeg' },
+          { src: current_song.thumb_path, sizes: '384x384', type: 'image/jpeg' },
+          { src: current_song.thumb_path, sizes: '512x512', type: 'image/jpeg' },
+        ]
+      });
+    }
   }, [current_song, audio]);
 
   useEffect(() => {
