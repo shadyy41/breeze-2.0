@@ -6,9 +6,7 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
 import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const revalidateTime = 300; //in seconds
-
-/* unmaintainable mess :) */
+const revalidateTime = (process.env.NODE_ENV==='production') ?  500 : 1; //in seconds
 
 export async function createSong(song: {
   name: string;
@@ -366,7 +364,7 @@ async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
     );
 
     const data = await sql`
-      SELECT id, name, song_path, thumb_path, created_at
+      SELECT id, name, song_path, thumb_path, created_at, private
       FROM next_auth.songs
       WHERE user_id = ${session.user.id}
     `;
@@ -374,6 +372,8 @@ async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
     const songs: Song[] = [];
 
     for (const s of data) {
+      if(!s.private) continue;
+
       const { signedSongUrl, signedThumbUrl } = await generateSignedUrls(
         s.song_path,
         s.thumb_path,
