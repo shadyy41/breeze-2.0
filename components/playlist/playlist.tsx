@@ -36,6 +36,7 @@ import { Button } from '../ui/button';
 import { deleteSong, removeSong } from '@/app/actions';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { useSession } from 'next-auth/react';
 
 const Playlist = ({
   playlist,
@@ -203,6 +204,7 @@ const TableDropdown = ({
   const cascade_song_remove = usePlayerStore((s) => s.cascade_song_remove);
   const cascade_song_delete = usePlayerStore((s) => s.cascade_song_delete);
   const current_song = usePlayerStore((s) => s.current_song);
+  const { data: session } = useSession();
 
   const push = usePlayerStore((s) => s.push_song);
 
@@ -272,9 +274,9 @@ const TableDropdown = ({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onSelect={() => setPlaylistDialogOpen(true)}>
+          {session && <DropdownMenuItem onSelect={() => setPlaylistDialogOpen(true)}>
             Add To Playlist
-          </DropdownMenuItem>
+          </DropdownMenuItem>}
           <DropdownMenuItem onSelect={handlePush}>
             Add To Queue
           </DropdownMenuItem>

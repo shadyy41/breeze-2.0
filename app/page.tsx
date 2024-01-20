@@ -23,7 +23,7 @@ const Home = async () => {
             Sign in to create playlists and upload songs.
           </h2>
           <h3 className='text-xl font-medium'>Explore NCS</h3>
-          <div className='flex w-full flex-wrap gap-4'>
+          <div className='grid w-full grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
             {public_songs?.songs.map((song, idx) => (
               <SongCard song={song} key={song.id} />
             ))}
