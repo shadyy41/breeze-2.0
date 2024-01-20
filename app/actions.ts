@@ -6,7 +6,9 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
 import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const revalidateTime = 1; //in seconds
+const revalidateTime = 300; //in seconds
+
+/* unmaintainable mess :) */
 
 export async function createSong(song: {
   name: string;
@@ -261,7 +263,8 @@ export async function getUserPlaylists(): Promise<Playlist[]> {
                 'id', songs.id,
                 'name', songs.name,
                 'thumb_path', songs.thumb_path,
-                'song_path', songs.song_path
+                'song_path', songs.song_path,
+                'private', songs.private
             )
         ) AS songs
     FROM
@@ -288,22 +291,41 @@ export async function getUserPlaylists(): Promise<Playlist[]> {
       } = { name: p.name, id: p.id, songs: [] };
 
       for (const s of p.songs) {
-        const { signedSongUrl, signedThumbUrl } = await generateSignedUrls(
-          s.song_path,
-          s.thumb_path,
-          supabase
-        );
+        if (!s.id) {
+          continue; //bad sql query
+        }
+        if (!s.private) {
+          const { thumb_data, song_data } = getPublicSongUrls(
+            s.song_path,
+            s.thumb_path,
+            supabase
+          );
+          if (thumb_data && song_data) {
+            playlist.songs.push({
+              ...s,
+              date_added: formatDate(s.date_added),
+              song_path: song_data.publicUrl,
+              thumb_path: thumb_data.publicUrl,
+            });
+          }
+        } else {
+          const { signedSongUrl, signedThumbUrl } = await generateSignedUrls(
+            s.song_path,
+            s.thumb_path,
+            supabase
+          );
 
-        const { data: thumb_data, error: thumb_error } = signedThumbUrl;
-        const { data: song_data, error: song_error } = signedSongUrl;
+          const { data: thumb_data, error: thumb_error } = signedThumbUrl;
+          const { data: song_data, error: song_error } = signedSongUrl;
 
-        if (thumb_data && song_data) {
-          playlist.songs.push({
-            ...s,
-            date_added: formatDate(s.date_added),
-            song_path: song_data.signedUrl,
-            thumb_path: thumb_data.signedUrl,
-          });
+          if (thumb_data && song_data) {
+            playlist.songs.push({
+              ...s,
+              date_added: formatDate(s.date_added),
+              song_path: song_data.signedUrl,
+              thumb_path: thumb_data.signedUrl,
+            });
+          }
         }
       }
 
@@ -464,7 +486,8 @@ async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
           'name', s.name,
           'thumb_path', s.thumb_path,
           'song_path', s.song_path,
-          'date_added', ps.date_added
+          'date_added', ps.date_added,
+          'private', s.private
         )
       ) AS songs
     FROM
@@ -484,25 +507,46 @@ async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
     const songs: Song[] = [];
 
     for (const s of data[0].songs) {
-      const { signedSongUrl, signedThumbUrl } = await generateSignedUrls(
-        s.song_path,
-        s.thumb_path,
-        supabase
-      );
+      if (!s.id) continue;
+      if (!s.private) {
+        const { thumb_data, song_data } = getPublicSongUrls(
+          s.song_path,
+          s.thumb_path,
+          supabase
+        );
 
-      const { data: thumb_data, error: thumb_error } = signedThumbUrl;
-      const { data: song_data, error: song_error } = signedSongUrl;
+        if (thumb_data && song_data) {
+          songs.push({
+            id: s.id,
+            date_added: formatDate(s.date_added),
+            created_at: s.created_at,
+            name: s.name,
+            song_path: song_data.publicUrl,
+            thumb_path: thumb_data.publicUrl,
+            private: true,
+          });
+        }
+      } else {
+        const { signedSongUrl, signedThumbUrl } = await generateSignedUrls(
+          s.song_path,
+          s.thumb_path,
+          supabase
+        );
 
-      if (thumb_data && song_data) {
-        songs.push({
-          id: s.id,
-          created_at: s.created_at,
-          date_added: formatDate(s.date_added),
-          name: s.name,
-          song_path: song_data.signedUrl,
-          thumb_path: thumb_data.signedUrl,
-          private: true,
-        });
+        const { data: thumb_data, error: thumb_error } = signedThumbUrl;
+        const { data: song_data, error: song_error } = signedSongUrl;
+
+        if (thumb_data && song_data) {
+          songs.push({
+            id: s.id,
+            created_at: s.created_at,
+            date_added: formatDate(s.date_added),
+            name: s.name,
+            song_path: song_data.signedUrl,
+            thumb_path: thumb_data.signedUrl,
+            private: true,
+          });
+        }
       }
     }
 
@@ -512,6 +556,21 @@ async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
     console.error('Error fetching playlist:', error);
     return null;
   }
+}
+
+function getPublicSongUrls(
+  songPath: string,
+  thumbPath: string,
+  supabase: SupabaseClient
+) {
+  const { data: thumb_data } = supabase.storage
+    .from('public_songs')
+    .getPublicUrl(thumbPath);
+  const { data: song_data } = supabase.storage
+    .from('public_songs')
+    .getPublicUrl(songPath);
+
+  return { thumb_data, song_data };
 }
 
 async function generateSignedUrls(
@@ -542,6 +601,6 @@ function formatDate(timestampString: string): string {
   return timestamp.toLocaleDateString('en-GB', options);
 }
 
-export async function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// export async function wait(ms: number): Promise<void> {
+//   return new Promise((resolve) => setTimeout(resolve, ms));
+// }

@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Playlist, Song } from '@/types/types';
 import Playbar from '@/components/playlist/playbar';
 import usePlayerStore, { CurrentSong } from '@/lib/store';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,9 +40,11 @@ import toast from 'react-hot-toast';
 const Playlist = ({
   playlist,
   is_upload,
+  is_public,
 }: {
   playlist: Playlist;
   is_upload: boolean;
+  is_public: boolean;
 }) => {
   return (
     <ScrollArea className='h-full w-full bg-zinc-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(39,39,42,0.8),rgba(255,255,255,0))]'>
@@ -52,13 +54,17 @@ const Playlist = ({
             <PlaylistIcon songs={playlist.songs} />
           </div>
           <div className='flex w-full flex-col justify-center gap-2 md:max-w-[calc(100%-296px)]'>
-            <Badge variant={'pink'}>Private</Badge>
+            <Badge variant={'pink'}>{is_public ? 'Public' : 'Private'}</Badge>
             <h2 className='w-full truncate text-2xl font-medium md:text-5xl md:leading-relaxed'>
               {playlist.name}
             </h2>
           </div>
         </header>
-        <Playbar playlist={playlist} is_upload={is_upload} />
+        <Playbar
+          playlist={playlist}
+          is_upload={is_upload}
+          is_public={is_public}
+        />
         <div className='flex flex-col gap-2 pb-10 text-sm md:gap-4'>
           <div className='flex h-12 w-full items-center justify-start gap-4 border-b border-zinc-800 px-3 text-zinc-400 md:px-4'>
             <div className='flex w-6 flex-shrink-0 items-center justify-center truncate'>
@@ -77,6 +83,7 @@ const Playlist = ({
                 idx={idx}
                 is_upload={is_upload}
                 key={song.id}
+                is_public={is_public}
               />
             ))}
           </div>
@@ -91,11 +98,13 @@ const MyTableRow = ({
   playlist,
   idx,
   is_upload,
+  is_public,
 }: {
   song: Song;
   playlist: Playlist;
   idx: number;
   is_upload: boolean;
+  is_public: boolean;
 }) => {
   const play_playlist = usePlayerStore((s) => s.play_playlist);
   const current_song = usePlayerStore((s) => s.current_song);
@@ -160,17 +169,19 @@ const MyTableRow = ({
       </div>
       <div className='hidden h-full w-2/5 items-center gap-3 md:flex'>
         <p className='truncate'>
-          {is_upload ? song.created_at : song.date_added}
+          {is_upload || is_public ? song.created_at : song.date_added}
         </p>
         <TableDropdown
           song={{ ...song, playlist_id: playlist.id }}
           is_upload={is_upload}
+          is_public={is_public}
         />
       </div>
       <div className='md:hidden'>
         <TableDropdown
           song={{ ...song, playlist_id: playlist.id }}
           is_upload={is_upload}
+          is_public={is_public}
         />
       </div>
     </div>
@@ -180,9 +191,11 @@ const MyTableRow = ({
 const TableDropdown = ({
   song,
   is_upload,
+  is_public,
 }: {
   song: CurrentSong;
   is_upload: boolean;
+  is_public: boolean;
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState<boolean>(false);
@@ -200,6 +213,7 @@ const TableDropdown = ({
   };
 
   const handleDelete = async () => {
+    if (is_public) return;
     const toast_id = toast.loading('Deleting song');
     setDeleting(true);
     try {
@@ -224,6 +238,7 @@ const TableDropdown = ({
   };
 
   const handleRemove = async () => {
+    if (is_public) return;
     const toast_id = toast.loading('Removing song');
     setDeleting(true);
     try {
@@ -263,10 +278,14 @@ const TableDropdown = ({
           <DropdownMenuItem onSelect={handlePush}>
             Add To Queue
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setDeleteDialogOpen(true)}>
-            {is_upload ? 'Delete Song' : 'Remove'}
-          </DropdownMenuItem>
+          {!is_public && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+                {is_upload ? 'Delete Song' : 'Remove'}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

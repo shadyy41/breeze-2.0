@@ -16,7 +16,7 @@ const Page = async () => {
   if (!session) {
     return (
       <div className='h-full w-full p-7'>
-        <h2 className='text-xl font-medium'>
+        <h2 className='text-xl font-medium text-zinc-400'>
           Sign in to create playlists and upload songs.
         </h2>
       </div>
@@ -30,8 +30,10 @@ const Page = async () => {
 
   if (!uploads) {
     return (
-      <div className='h-full w-full p-7'>
-        <h2 className='text-xl font-medium'>Nothing to show here</h2>
+      <div className='h-full w-full p-72'>
+        <h2 className='tex-zinc-400 text-xl font-medium'>
+          Nothing to show here
+        </h2>
       </div>
     );
   }

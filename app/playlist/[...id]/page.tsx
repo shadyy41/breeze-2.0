@@ -9,7 +9,9 @@ const Page = async ({ params }: { params: { id: string } }) => {
   if (!session) {
     return (
       <div className='h-full w-full p-7'>
-        <h2 className='text-xl font-medium'>Playlist not found</h2>
+        <h2 className='text-xl font-medium text-zinc-400'>
+          Playlist not found
+        </h2>
       </div>
     );
   }
@@ -26,7 +28,7 @@ const Page = async ({ params }: { params: { id: string } }) => {
 
   return (
     <Providers session={session}>
-      <Playlist playlist={playlist} is_upload={false} />;
+      <Playlist playlist={playlist} is_upload={false} is_public={false} />;
     </Providers>
   );
 };

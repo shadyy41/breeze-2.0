@@ -30,9 +30,11 @@ import { Playlist, Song } from '@/types/types';
 const Playbar = ({
   playlist,
   is_upload,
+  is_public,
 }: {
   playlist: Playlist;
   is_upload: boolean;
+  is_public: boolean;
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
@@ -69,6 +71,7 @@ const Playbar = ({
   };
 
   const handleDelete = async () => {
+    if (is_public) return;
     const toast_id = toast.loading('Deleting playlist');
     setDeleting(true);
     try {
@@ -113,15 +116,17 @@ const Playbar = ({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem
-            onSelect={() => toast.error('Feature not implemented yet.')}
-          >
-            Edit Details
-          </DropdownMenuItem>
+          {!(is_upload || is_public) && (
+            <DropdownMenuItem
+              onSelect={() => toast.error('Feature not implemented yet.')}
+            >
+              Edit Details
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={addToQueue}>
             Add To Queue
           </DropdownMenuItem>
-          {!is_upload && (
+          {!(is_upload || is_public) && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setDeleteDialogOpen(true)}>
