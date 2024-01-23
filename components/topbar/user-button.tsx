@@ -48,7 +48,7 @@ const UserButton: React.FC<{ user: { image: string; name: string } }> = ({
             />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent collisionPadding={24}>
           <DropdownMenuItem
             onSelect={() => toast.error('Feature not implemented yet.')}
           >
