@@ -19,13 +19,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '../ui/button';
-import { deletePlaylist } from '@/app/actions';
-import { useState, useMemo } from 'react';
+import { deletePlaylist, updatePlaylistName } from '@/app/actions';
+import { useState, useMemo, ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import usePlayerStore from '@/lib/store';
 import { Playlist, Song } from '@/types/types';
+import { Input } from '../ui/input';
 
 const Playbar = ({
   playlist,
@@ -38,6 +45,10 @@ const Playbar = ({
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
+
+  const [changingName, setChangingName] = useState<boolean>(false);
+  const [nameDialogOpen, setNameDialogOpen] = useState<boolean>(false);
+  const [playlistName, setPlaylistName] = useState<string>('');
 
   const router = useRouter();
   const play_playlist = usePlayerStore((s) => s.play_playlist);
@@ -71,7 +82,6 @@ const Playbar = ({
   };
 
   const handleDelete = async () => {
-    if (is_public) return;
     const toast_id = toast.loading('Deleting playlist');
     setDeleting(true);
     try {
@@ -100,6 +110,34 @@ const Playbar = ({
     toast.success('Added playlist to the queue.');
   };
 
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPlaylistName(e.target.value);
+  };
+
+  const handleRename = async () => {
+    if (playlistName.length === 0) {
+      toast.error('Playlist name cannot empty');
+      return;
+    }
+    const toast_id = toast.loading('Changing name');
+    setChangingName(true);
+    try {
+      const { id } = playlist;
+      const res = await updatePlaylistName(id, playlistName);
+      if (!res) {
+        toast.error('An error occured.', { id: toast_id });
+      } else {
+        toast.success('Playlist name changed', { id: toast_id });
+        setNameDialogOpen(false);
+      }
+    } catch (error) {
+      toast.error('An error occured.', { id: toast_id });
+    } finally {
+      setChangingName(false);
+      setPlaylistName('');
+    }
+  };
+
   return (
     <div className='flex w-full items-center gap-4 px-2'>
       <button
@@ -117,9 +155,7 @@ const Playbar = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {!(is_upload || is_public) && (
-            <DropdownMenuItem
-              onSelect={() => toast.error('Feature not implemented yet.')}
-            >
+            <DropdownMenuItem onSelect={() => setNameDialogOpen(true)}>
               Edit Details
             </DropdownMenuItem>
           )}
@@ -154,6 +190,29 @@ const Playbar = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Playlist Name</DialogTitle>
+          </DialogHeader>
+
+          <Input
+            type='text'
+            placeholder='Playlist name'
+            value={playlistName}
+            onChange={handleInputChange}
+            disabled={changingName}
+          />
+          <Button
+            onClick={handleRename}
+            variant={'pink'}
+            disabled={!playlistName || changingName}
+          >
+            {changingName ? 'Updating' : 'Update'}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

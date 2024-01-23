@@ -190,6 +190,24 @@ export async function removeSong(playlist_id: string, song_id: string) {
   }
 }
 
+export async function updatePlaylistName(playlist_id: string, name: string) {
+  try {
+    await sql`
+        UPDATE next_auth.playlists
+        SET name = ${name}
+        WHERE id = ${playlist_id}
+      `;
+
+    revalidateTag('user_playlists');
+    revalidateTag('playlist');
+
+    return true;
+  } catch (error) {
+    console.log(error, 'ERROR UPDATING PLAYLIST');
+    return false;
+  }
+}
+
 export const getCachedPlaylistCount = unstable_cache(
   async (id: string) => getPlaylistCount(),
   ['playlist_count'],
