@@ -58,6 +58,7 @@ const CreatePlaylistModal = ({
           placeholder='Playlist name'
           value={playlistName}
           onChange={handleInputChange}
+          disabled={creating}
         />
         <Button
           onClick={handleCreate}

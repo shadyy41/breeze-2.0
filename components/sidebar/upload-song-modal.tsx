@@ -200,6 +200,7 @@ const UploadSongModal = ({
           placeholder='Song name'
           value={songName}
           onChange={handleInputChange}
+          disabled={uploading}
         />
         <DropZone
           onDrop={onDropSong}
