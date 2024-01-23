@@ -51,7 +51,7 @@ const BottomMenu = ({
   }
 
   return (
-    <div className='flex flex-grow flex-col gap-5 overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 py-5 font-medium'>
+    <div className='flex flex-grow flex-col gap-3 overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 py-5 font-medium'>
       <div className='flex w-full items-center justify-between px-6'>
         <Button
           variant={'skeleton'}
@@ -85,7 +85,7 @@ const BottomMenu = ({
         <div
           className={`grid h-full w-full grid-cols-1 ${
             sidebar_expanded ? 'gap-3 px-1' : 'gap-2 px-1'
-          } pb-5`}
+          } pb-5 pt-2`}
         >
           {all_playlists.map((p, idx) => {
             return (
