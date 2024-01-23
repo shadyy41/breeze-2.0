@@ -32,12 +32,12 @@ const SidebarWrapper = async () => {
 
   const key: string = (() => {
     let total = 0;
-    let string_key = ''
+    let string_key = '';
 
     if (uploads) total += uploads.songs.length + 1;
     playlists?.map((p) => {
-      total += p.songs.length
-      string_key += p.name
+      total += p.songs.length;
+      string_key += p.name;
     });
 
     total += playlists.length;
