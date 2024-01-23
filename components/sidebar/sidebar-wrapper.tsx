@@ -30,14 +30,19 @@ const SidebarWrapper = async () => {
   const upload_count = await getCachedUploadCount(session.user.id);
   const playlist_count = await getCachedPlaylistCount(session.user.id);
 
-  const key: number = (() => {
+  const key: string = (() => {
     let total = 0;
+    let string_key = ''
 
     if (uploads) total += uploads.songs.length + 1;
-    playlists?.map((p) => (total += p.songs.length));
+    playlists?.map((p) => {
+      total += p.songs.length
+      string_key += p.name
+    });
+
     total += playlists.length;
 
-    return total;
+    return total + ' $ ' + string_key;
   })();
 
   return (
