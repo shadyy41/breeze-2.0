@@ -126,17 +126,7 @@ export async function deleteSong(songId: string): Promise<boolean> {
 
     const { supabaseAccessToken } = session;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${supabaseAccessToken}`,
-          },
-        },
-      }
-    );
+    const supabase = getSupabaseClient(supabaseAccessToken);
 
     await sql.begin(async (sql) => {
       const data = await sql`
@@ -259,17 +249,7 @@ export async function getUserPlaylists(): Promise<Playlist[]> {
 
     const { supabaseAccessToken } = session;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${supabaseAccessToken}`,
-          },
-        },
-      }
-    );
+    const supabase = getSupabaseClient(supabaseAccessToken);
     const data = await sql`
     SELECT
         playlists.id,
@@ -369,17 +349,7 @@ async function getUploadedSongs(): Promise<ActionResponse<Playlist>> {
 
     const { supabaseAccessToken } = session;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${supabaseAccessToken}`,
-          },
-        },
-      }
-    );
+    const supabase = getSupabaseClient(supabaseAccessToken);
 
     const data = await sql`
       SELECT id, name, song_path, thumb_path, created_at, private
@@ -428,10 +398,7 @@ export const getCachedPublicSongs = unstable_cache(
 
 async function getPublicSongs(): Promise<ActionResponse<Playlist>> {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? ''
-    );
+    const supabase = getSupabaseClient();
 
     const data = await sql`
       SELECT id, name, song_path, thumb_path, created_at
@@ -482,17 +449,8 @@ async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
 
     const { supabaseAccessToken } = session;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${supabaseAccessToken}`,
-          },
-        },
-      }
-    );
+    const supabase = getSupabaseClient(supabaseAccessToken);
+
     const data = await sql`
     SELECT
       p.id AS id,
@@ -578,10 +536,7 @@ async function getPlaylist(id: string): Promise<ActionResponse<Playlist>> {
 
 export async function search(search_term: string) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
-      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? ''
-    );
+    const supabase = getSupabaseClient();
 
     const data = await sql`
       SELECT *
@@ -647,6 +602,26 @@ async function generateSignedUrls(
     .createSignedUrl(thumbPath, 3600000);
 
   return { signedSongUrl, signedThumbUrl };
+}
+
+function getSupabaseClient(token?: string) {
+  if (!token)
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
+      process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? ''
+    );
+
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ?? '',
+    process.env.NEXT_PUBLIC_SUPABASE_API_KEY ?? '',
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    }
+  );
 }
 
 function formatDate(timestampString: string): string {
