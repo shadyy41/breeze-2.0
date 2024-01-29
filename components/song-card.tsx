@@ -16,9 +16,9 @@ export function SongCardSkeleton() {
     >
       <div className='flex w-full flex-col gap-2 rounded-md border border-zinc-800 p-4 transition-colors hover:border-zinc-700'>
         <div className='relative aspect-square w-full overflow-hidden rounded-md'>
-          <Skeleton className='w-full h-full'/>
+          <Skeleton className='h-full w-full' />
         </div>
-        <Skeleton className='w-full h-12'/>
+        <Skeleton className='h-12 w-full' />
       </div>
     </Link>
   );
