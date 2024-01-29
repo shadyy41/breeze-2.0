@@ -8,14 +8,19 @@ import { PiPlayFill, PiPauseFill } from 'react-icons/pi';
 import usePlayerStore from '@/lib/store';
 import { MouseEvent } from 'react';
 
-export function PlaylistCardSkeleton() {
+export function SongCardSkeleton() {
   return (
-    <div className='m-1 flex w-full max-w-[14rem] flex-col gap-2 rounded-md border border-zinc-800 p-4'>
-      <Skeleton className='aspect-square w-full' />
-      <div className='flex w-full flex-col'>
-        <Skeleton className='h-[52px] w-full' />
+    <Link
+      href={'/library/ncs'}
+      className='group w-full max-w-[14rem] rounded-md bg-zinc-950 ring-offset-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2'
+    >
+      <div className='flex w-full flex-col gap-2 rounded-md border border-zinc-800 p-4 transition-colors hover:border-zinc-700'>
+        <div className='relative aspect-square w-full overflow-hidden rounded-md'>
+          <Skeleton className='w-full h-full'/>
+        </div>
+        <Skeleton className='w-full h-12'/>
       </div>
-    </div>
+    </Link>
   );
 }
 
