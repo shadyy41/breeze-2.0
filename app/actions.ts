@@ -6,7 +6,7 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import type { ActionResponse, Playlist, Song } from '@/types/types';
 import { PLAYLIST_COUNT_LIMIT, UPLOAD_COUNT_LIMIT } from '@/lib/limits';
 
-const revalidateTime = process.env.NODE_ENV === 'production' ? 500 : 1; //in seconds
+const revalidateTime = process.env.NODE_ENV === 'production' ? 1800 : 1; //in seconds
 
 export async function createSong(song: {
   name: string;
