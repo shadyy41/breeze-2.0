@@ -20,13 +20,12 @@ const Page = () => {
       setLoading(true);
 
       try {
-        const res = await search(query)
+        const res = await search(query);
         setResults(res);
       } catch (error) {
-        toast.error('An error ocurred while searching')
-      }
-      finally{
-        setLoading(false)
+        toast.error('An error ocurred while searching');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -42,46 +41,52 @@ const Page = () => {
   }, [query]);
 
   const handleClear = () => {
-    setQuery('')
-    setResults(null)
-    setLoading(false)
-  }
+    setQuery('');
+    setResults(null);
+    setLoading(false);
+  };
 
   return (
     <ScrollArea className='h-full w-full bg-zinc-950 bg-[radial-gradient(ellipse_80%_80%_at_70%_-20%,rgba(39,39,42,0.6),rgba(255,255,255,0))]'>
       <div className='flex flex-col gap-3 p-4 sm:gap-4 sm:p-5 md:gap-6 md:p-7'>
         <h2 className='text-2xl font-medium'>Search</h2>
-        <label className='w-full max-w-xl border border-zinc-800 rounded-md overflow-hidden flex items-center px-4 gap-1 text-xl bg-zinc-950 focus-within:outline-none focus-within:ring-2 focus-within:ring-pink-600 focus-within:ring-offset-2 transition-colors ring-offset-zinc-950 text-zinc-400 focus-within:text-zinc-200 hover:text-zinc-200'>
-          <PiMagnifyingGlassBold/>
+        <label className='flex w-full max-w-xl items-center gap-1 overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 px-4 text-xl text-zinc-400 ring-offset-zinc-950 transition-colors focus-within:text-zinc-200 focus-within:outline-none focus-within:ring-2 focus-within:ring-pink-600 focus-within:ring-offset-2 hover:text-zinc-200'>
+          <PiMagnifyingGlassBold />
           <Input
             type='string'
             placeholder='type to search...'
-            className='border-0 rounded-none focus-visible:ring-0'
+            className='rounded-none border-0 focus-visible:ring-0'
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
         <div className='grid w-full grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5'>
-          {results?.map((song, idx) => (
-            <SongCard song={song} key={song.id} />
-          ))}
-          {
-            (results?.length===0 && loading) && <>
-              <SongCardSkeleton/>
-              <SongCardSkeleton/>
-              <SongCardSkeleton/>
+          {results?.map((song, idx) => <SongCard song={song} key={song.id} />)}
+          {results?.length === 0 && loading && (
+            <>
+              <SongCardSkeleton />
+              <SongCardSkeleton />
+              <SongCardSkeleton />
             </>
-          }
-          {
-            (results?.length ===0 && !loading) && <>
+          )}
+          {results?.length === 0 && !loading && (
+            <>
               <h2 className='text-xl font-medium text-zinc-400'>
                 No results found
               </h2>
             </>
-          }
+          )}
         </div>
-        {<button className={`text-base text-zinc-400 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 transition-colors ring-offset-zinc-950 ${results?.length ? 'visible' : 'invisible'} w-fit`} onClick={handleClear}> clear results </button>}
-
+        {
+          <button
+            className={`text-base text-zinc-400 ring-offset-zinc-950 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-600 focus-visible:ring-offset-2 ${
+              results?.length ? 'visible' : 'invisible'
+            } w-fit`}
+            onClick={handleClear}
+          >
+            clear results
+          </button>
+        }
       </div>
     </ScrollArea>
   );
