@@ -1,10 +1,10 @@
 import postgres from 'postgres';
 
 const sql = postgres({
-  host: 'db.lkasfkmxzgngqwmtzjbw.supabase.co',
+  host: 'aws-0-ap-south-1.pooler.supabase.com',
   port: 6543,
   database: 'postgres',
-  username: 'postgres',
+  username: 'postgres.lkasfkmxzgngqwmtzjbw',
   password: process.env.SUPABASE_DB_PASSWORD ?? '',
   ssl: {
     rejectUnauthorized: true,
